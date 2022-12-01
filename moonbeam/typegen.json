@@ -1,0 +1,14 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://moonbeam.archive.subsquid.io/graphql",
+  "typesBundle": "moonbeam",
+  "events": [
+    "ParachainStaking.Rewarded",
+    "ParachainStaking.ReservedForParachainBond",
+    "Treasury.Deposit"
+  ],
+  "calls": [ 
+  ],
+  "storage": [
+  ]
+}
