@@ -119,6 +119,8 @@ You can find scripts to process the indexed data in the `scripts` directory. The
 - `inflation-parachain-bond-reserve.js` - provides data for inflation to the parachain bond reserve
 - `inflation-staking.js` - provides data for inflation to staking (collators & delegators)
 - `net-inflation.js` - provides data for net inflation
+- `gross-inflation.js` - provides data for gross inflation (sum of parachain bond reserve & staking related inflation)
+- `burned-fees.js` - provides data for the burned fees
 
 To run the script, you can pass the following arguments:
 
