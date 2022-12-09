@@ -1,21 +1,10 @@
-/node_modules
+/node_modules/
 
-# moonbeam
-/moonbeam/node_modules
-/moonbeam/lib
+**/node_modules/
+**/lib/
 
-/moonbeam/**Versions.json
-/moonbeam/**Versions.jsonl
-
-# IDE files
-/moonbeam/.idea
-
-# moonriver
-/moonriver/node_modules
-/moonriver/lib
-
-/moonriver/**Versions.json
-/moonriver/**Versions.jsonl
+**Versions.json
+**Versions.jsonl
 
 # IDE files
-/moonriver/.idea
+**/.idea

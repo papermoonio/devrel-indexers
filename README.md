@@ -1,16 +1,6 @@
-# Inflation-related Indexers
+# DevRel Indexers
 
-This repo contains two [Subsquid](https://docs.subsquid.io/) indexers: one for Moonbeam and one for Moonriver.
-
-Both indexers retrieve the following data:
-
-✅ `ParachainStaking.Rewarded` events for collator and delegator reward payouts
-
-✅ `ParachainStaking.ReservedForParachainBond` events for transfers to the parachain bond reserve
-
-✅ `Treasury.Deposit` events for determining the burned fees
-
-Please note that in the future the method for using `Treasury.Deposit` events to calculate burned fees has the potential to **not** be totally accurate. If a treasury propoal gets rejected, the deposit for the proposal is sent to the treasury and a `Treasury.Deposit` event will be emitted and as a result this will impact the burned fees calculation. 
+This repository contains [Subsquid](https://docs.subsquid.io/) indexers split up by network. 
 
 ## Get Started
 
@@ -54,7 +44,7 @@ To get started, you can take the following steps from the `moonriver` or `moonbe
     make serve
     ```
 
-    To access the GraphQL playground, navigate to [localhost:4350/graphql](http://localhost:4350/graphql) for Moonbeam and [localhost:4351/graphql](http://localhost:4351/graphql) for Moonriver.
+    To access the GraphQL playground, navigate to [localhost:4350/graphql](http://localhost:4350/graphql) which is the default and is typically set up for Moonbeam and [localhost:4351/graphql](http://localhost:4351/graphql) for Moonriver.
 
 
 When you start to see the terminal output similar logs to the following, you'll know that your indexer has begun syncing blocks:
@@ -91,20 +81,6 @@ If you've made changes to any of the typescript files such as the `processor.ts`
 ```
 make build
 ```
-
-## Ports
-
-The default ports for Moonbeam are as follows:
-
-- DB_PORT=23798
-- PROCESSOR_PROMETHEUS_PORT=3000
-- GQL_PORT=4350
-
-The default ports for Moonriver are as follows:
-
-- DB_PORT=23799
-- PROCESSOR_PROMETHEUS_PORT=3001
-- GQL_PORT=4351
 
 ## Common Errors
 
