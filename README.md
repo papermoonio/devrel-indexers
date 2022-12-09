@@ -1,6 +1,6 @@
 # DevRel Indexers
 
-This repository contains [Subsquid](https://docs.subsquid.io/) indexers split up by network. 
+This repository contains [Subsquid](https://docs.subsquid.io/) indexers split up by network. Please refer to the README.md files for each indexer for more information.
 
 ## Get Started
 
@@ -90,7 +90,7 @@ If you consistently receive the error, it is possible that the batch size is too
 
 # Post-Processing Scripts
 
-You can find scripts to process the indexed data in the `scripts` directory. There are three scripts:
+You can find scripts to process the indexed data in the `scripts` directory. There are five scripts:
 
 - `inflation-parachain-bond-reserve.js` - provides data for inflation to the parachain bond reserve
 - `inflation-staking.js` - provides data for inflation to staking (collators & delegators)

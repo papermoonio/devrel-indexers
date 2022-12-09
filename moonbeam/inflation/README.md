@@ -1,6 +1,6 @@
 # Inflation-related Indexers
 
-This directory contains a [Subsquid](https://docs.subsquid.io/) indexers for Moonbeam.
+This directory contains a [Subsquid](https://docs.subsquid.io/) indexer for Moonbeam.
 
 The indexer retrieves the following data:
 

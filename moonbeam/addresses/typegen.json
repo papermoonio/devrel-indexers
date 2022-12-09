@@ -1,0 +1,11 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://moonbeam.archive.subsquid.io/graphql",
+  "typesBundle": "moonbeam",
+  "events": [
+    "System.NewAccount"
+  ],
+  "calls": [
+    "Ethereum.transact"
+  ]
+}

@@ -1,0 +1,21 @@
+type ContractAddress @entity {
+
+  id: ID!
+
+  timestamp: String!
+
+  blockNo: String!
+  
+}
+
+type Address @entity {
+
+  id: ID!
+
+  timestamp: String!
+
+  blockNo: String!
+
+  accountId: String!
+  
+}

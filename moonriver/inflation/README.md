@@ -1,6 +1,6 @@
 # Inflation-related Indexers
 
-This directory contains a [Subsquid](https://docs.subsquid.io/) indexers for Moonbeam.
+This directory contains a [Subsquid](https://docs.subsquid.io/) indexer for Moonbeam.
 
 The indexer retrieves the following data:
 
@@ -66,15 +66,15 @@ When you start to see the terminal output similar logs to the following, you'll 
 
 ## Ports
 
-The default ports for Moonbeam are as follows:
+The default ports for Moonriver are as follows:
 
-- DB_PORT=23798
-- PROCESSOR_PROMETHEUS_PORT=3000
-- GQL_PORT=4350
+- DB_PORT=23799
+- PROCESSOR_PROMETHEUS_PORT=3001
+- GQL_PORT=4351
 
 # Post-Processing Scripts
 
-You can find scripts to process the indexed data in the root `scripts` directory. There are three scripts:
+You can find scripts to process the indexed data in the root `scripts` directory. There are five scripts:
 
 - `inflation-parachain-bond-reserve.js` - provides data for inflation to the parachain bond reserve
 - `inflation-staking.js` - provides data for inflation to staking (collators & delegators)
