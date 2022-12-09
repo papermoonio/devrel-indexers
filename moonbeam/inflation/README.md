@@ -74,7 +74,7 @@ The default ports for Moonbeam are as follows:
 
 # Post-Processing Scripts
 
-You can find scripts to process the indexed data in the root `scripts` directory. There are three scripts:
+You can find scripts to process the indexed data in the root `scripts` directory. There are five scripts:
 
 - `inflation-parachain-bond-reserve.js` - provides data for inflation to the parachain bond reserve
 - `inflation-staking.js` - provides data for inflation to staking (collators & delegators)
