@@ -2,9 +2,9 @@ type ContractAddress @entity {
 
   id: ID!
 
-  timestamp: String!
+  timestamp: BigInt!
 
-  blockNo: String!
+  blockNo: BigInt!
   
 }
 
@@ -12,9 +12,9 @@ type Address @entity {
 
   id: ID!
 
-  timestamp: String!
+  timestamp: BigInt!
 
-  blockNo: String!
+  blockNo: BigInt!
 
   accountId: String!
   

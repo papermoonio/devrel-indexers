@@ -3,11 +3,11 @@ import {
   BatchContext,
   BatchProcessorItem,
   SubstrateBatchProcessor,
+  SubstrateCall,
   toHex,
 } from "@subsquid/substrate-processor";
 import { lookupArchive } from "@subsquid/archive-registry";
 import { ContractAddress, Address } from "./model";
-import { EthereumTransactCall } from "./types/calls";
 import { SystemNewAccountEvent } from "./types/events";
 
 const processor = new SubstrateBatchProcessor()
@@ -35,20 +35,20 @@ async function getcontractAddresses(ctx: Ctx): Promise<ContractAddress[]> {
   for (const block of ctx.blocks) {
     for (const item of block.items) {
       if (item.kind === "call" && item.name === "Ethereum.transact") {
-        const call = new EthereumTransactCall(ctx, item.call);
+        const call = item.call as SubstrateCall;
         let action: string = "";
 
-        if (call.isV900) {
-          action = call.asV900.transaction.action.__kind;
-        } else if (call.isV1201) {
-          action = call.asV1201.transaction.value.action.__kind;
+        if (call.args.transaction.action) {
+          action = call.args.transaction.action.__kind;
+        } else {
+          action = call.args.transaction.value.action.__kind;
         }
 
         if (action && action == "Create") {
           let contractAddress = new ContractAddress();
           contractAddress.id = item.call.id;
-          contractAddress.timestamp = block.header.timestamp.toString();
-          contractAddress.blockNo = block.header.height.toString();
+          contractAddress.timestamp = BigInt(block.header.timestamp);
+          contractAddress.blockNo = BigInt(block.header.height);
 
           contractAddresses.push(contractAddress);
         }
@@ -67,8 +67,8 @@ async function getAddresses(ctx: Ctx): Promise<Address[]> {
         let address = new Address();
 
         address.id = item.event.id;
-        address.timestamp = block.header.timestamp.toString();
-        address.blockNo = block.header.height.toString();
+        address.timestamp = BigInt(block.header.timestamp);
+        address.blockNo = BigInt(block.header.height);
 
         if (event.isV900) {
           address.accountId = toHex(event.asV900);

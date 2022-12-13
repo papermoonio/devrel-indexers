@@ -1,4 +1,5 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import * as marshal from "./marshal"
 
 @Entity_()
 export class Address {
@@ -9,11 +10,11 @@ export class Address {
   @PrimaryColumn_()
   id!: string
 
-  @Column_("text", {nullable: false})
-  timestamp!: string
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  timestamp!: bigint
 
-  @Column_("text", {nullable: false})
-  blockNo!: string
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  blockNo!: bigint
 
   @Column_("text", {nullable: false})
   accountId!: string

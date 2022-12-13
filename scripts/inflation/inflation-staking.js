@@ -3,11 +3,10 @@ import { ethers } from "ethers";
 import {
   args,
   fetchData,
-  getMintingBugAmount,
   getMonthlyTimeRange,
   START_TIMESTAMPS,
   PORTS,
-} from "./common/index.js";
+} from "../common/index.js";
 import { stringify } from "csv-stringify";
 
 const main = async () => {
@@ -48,18 +47,10 @@ const main = async () => {
 
 const createQuery = (start, end) => {
   return `query {
-          parachainBondTransfers(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
-            id
-            balance
-          }
           stakingRewards(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
-            id
-            balance
-          }
-          burnedFees(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
-            id
-            amount    
-          }
+              id
+              balance
+            }
       }`;
 };
 
@@ -69,7 +60,7 @@ const writeToCsv = (data, interval, network) => {
     columns = { amount: "amount" };
   }
 
-  const filePath = `csv-files/${network}-${interval}-net-inflation.csv`;
+  const filePath = `csv-files/${network}-${interval}-staking-rewards.csv`;
 
   stringify(data, { header: true, columns }, (e, output) => {
     if (e) throw e;
@@ -90,32 +81,19 @@ const getDailyData = async (port, start, end, network) => {
   const csvRows = [];
 
   while (currDay < end) {
+    let amount = 0n;
+
     const query = createQuery(currDay, currDay + msDay);
-    const data = await fetchData(port, query);
+    const res = await fetchData(port, query);
 
-    let parachainBondTransfersAmount = 0n;
-    let stakingRewardsAmount = 0n;
-    let burnedFeesAmount = 0n;
-
-    for (let transfer of data.parachainBondTransfers) {
-      parachainBondTransfersAmount += BigInt(transfer.balance);
+    for (let reward of res.stakingRewards) {
+      amount += BigInt(reward.balance);
     }
-
-    for (let reward of data.stakingRewards) {
-      stakingRewardsAmount += BigInt(reward.balance);
-    }
-
-    for (let burnedFee of data.burnedFees) {
-      burnedFeesAmount += BigInt(burnedFee.amount);
-    }
-
-    const grossInflation = parachainBondTransfersAmount + stakingRewardsAmount;
-    const netInflation = grossInflation - burnedFeesAmount;
 
     // convert timestamps to readable dates
     const readableDate = new Date(currDay).toISOString().split("T")[0];
     // convert balance to ether
-    const amountInEth = ethers.utils.formatEther(netInflation);
+    const amountInEth = ethers.utils.formatEther(amount);
     csvRows.push([readableDate, amountInEth]);
 
     currDay += msDay;
@@ -132,37 +110,19 @@ const getMonthlyData = async (port, start, end, network) => {
   while (startTimestamp < end) {
     const timeRange = getMonthlyTimeRange(startTimestamp, end);
 
+    let amount = 0n;
+
     const query = createQuery(timeRange.start, timeRange.end);
-    const data = await fetchData(port, query);
-    const mintingBugAmount = getMintingBugAmount(
-      timeRange.readableStart,
-      network
-    );
+    const res = await fetchData(port, query);
 
-    let parachainBondTransfersAmount = 0n;
-    let stakingRewardsAmount = 0n;
-    let burnedFeesAmount = 0n;
-
-    for (let transfer of data.parachainBondTransfers) {
-      parachainBondTransfersAmount += BigInt(transfer.balance);
+    for (let reward of res.stakingRewards) {
+      amount += BigInt(reward.balance);
     }
-
-    for (let reward of data.stakingRewards) {
-      stakingRewardsAmount += BigInt(reward.balance);
-    }
-
-    for (let burnedFee of data.burnedFees) {
-      burnedFeesAmount += BigInt(burnedFee.amount);
-    }
-
-    const grossInflation = parachainBondTransfersAmount + stakingRewardsAmount;
-    const netInflation = grossInflation - burnedFeesAmount;
 
     // convert timestamps to readable dates
     const readableDate = new Date(startTimestamp).toISOString().split("T")[0];
     // convert balance to ether
-    const amountInEth =
-      ethers.utils.formatEther(netInflation) - mintingBugAmount;
+    const amountInEth = ethers.utils.formatEther(amount);
     csvRows.push([readableDate, amountInEth]);
 
     startTimestamp = timeRange.end + 1;
@@ -173,43 +133,22 @@ const getMonthlyData = async (port, start, end, network) => {
 
 const getTotalData = async (port, start, end, network) => {
   let startTimestamp = start;
-
-  let parachainBondTransfersAmount = 0n;
-  let stakingRewardsAmount = 0n;
-  let burnedFeesAmount = 0n;
-  let mintingBugTotalAmount = 0;
+  let amount = 0n;
 
   while (startTimestamp < end) {
     const timeRange = getMonthlyTimeRange(startTimestamp, end);
 
     const query = createQuery(timeRange.start, timeRange.end);
-    const data = await fetchData(port, query);
-    const mintingBugAmount = getMintingBugAmount(
-      timeRange.readableStart,
-      network
-    );
-    mintingBugTotalAmount += mintingBugAmount;
+    const res = await fetchData(port, query);
 
-    for (let transfer of data.parachainBondTransfers) {
-      parachainBondTransfersAmount += BigInt(transfer.balance);
-    }
-
-    for (let reward of data.stakingRewards) {
-      stakingRewardsAmount += BigInt(reward.balance);
-    }
-
-    for (let burnedFee of data.burnedFees) {
-      burnedFeesAmount += BigInt(burnedFee.amount);
+    for (let reward of res.stakingRewards) {
+      amount += BigInt(reward.balance);
     }
 
     startTimestamp = timeRange.end + 1;
   }
 
-  const grossInflation = parachainBondTransfersAmount + stakingRewardsAmount;
-  const netInflation = grossInflation - burnedFeesAmount;
-
-  const amountInEth =
-    ethers.utils.formatEther(netInflation) - mintingBugTotalAmount;
+  const amountInEth = ethers.utils.formatEther(amount);
   writeToCsv([[amountInEth]], "total", network);
 };
 

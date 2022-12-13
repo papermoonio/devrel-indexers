@@ -1,12 +1,11 @@
 import fs from "fs";
-import { ethers } from "ethers";
 import {
   args,
   fetchData,
   getMonthlyTimeRange,
   START_TIMESTAMPS,
   PORTS,
-} from "./common/index.js";
+} from "../common/index.js";
 import { stringify } from "csv-stringify";
 
 const main = async () => {
@@ -53,20 +52,19 @@ const main = async () => {
 
 const createQuery = (start, end) => {
   return `query {
-        parachainBondTransfers(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
+        contractAddresses(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
             id
-            balance
           }
     }`;
 };
 
 const writeToCsv = (data, interval, network) => {
-  let columns = { date: "date", amount: "amount" };
+  let columns = { date: "date", amount: "count" };
   if (interval === "total") {
-    columns = { amount: "amount" };
+    columns = { count: "count" };
   }
 
-  const filePath = `csv-files/${network}-${interval}-parachain-bond-reserve.csv`;
+  const filePath = `csv-files/${network}-${interval}-contract-addresses.csv`;
 
   stringify(data, { header: true, columns }, (e, output) => {
     if (e) throw e;
@@ -87,20 +85,14 @@ const getDailyData = async (port, start, end, network) => {
   const csvRows = [];
 
   while (currDay < end) {
-    let amount = 0n;
-
     const query = createQuery(currDay, currDay + msDay);
     const res = await fetchData(port, query);
 
-    for (let transfer of res.parachainBondTransfers) {
-      amount += BigInt(transfer.balance);
-    }
+    const dailyTotal = res.contractAddresses.length;
 
     // convert timestamps to readable dates
     const readableDate = new Date(currDay).toISOString().split("T")[0];
-    // convert balance to ether
-    const amountInEth = ethers.utils.formatEther(amount);
-    csvRows.push([readableDate, amountInEth]);
+    csvRows.push([readableDate, dailyTotal]);
 
     currDay += msDay;
   }
@@ -115,21 +107,14 @@ const getMonthlyData = async (port, start, end, network) => {
 
   while (startTimestamp < end) {
     const timeRange = getMonthlyTimeRange(startTimestamp, end);
-
-    let amount = 0n;
-
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
 
-    for (let transfer of res.parachainBondTransfers) {
-      amount += BigInt(transfer.balance);
-    }
+    const monthlyTotal = res.contractAddresses.length;
 
     // convert timestamps to readable dates
     const readableDate = new Date(startTimestamp).toISOString().split("T")[0];
-    // convert balance to ether
-    const amountInEth = ethers.utils.formatEther(amount);
-    csvRows.push([readableDate, amountInEth]);
+    csvRows.push([readableDate, monthlyTotal]);
 
     startTimestamp = timeRange.end + 1;
   }
@@ -139,7 +124,7 @@ const getMonthlyData = async (port, start, end, network) => {
 
 const getTotalData = async (port, start, end, network) => {
   let startTimestamp = start;
-  let amount = 0n;
+  let total = 0;
 
   while (startTimestamp < end) {
     const timeRange = getMonthlyTimeRange(startTimestamp, end);
@@ -147,15 +132,12 @@ const getTotalData = async (port, start, end, network) => {
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
 
-    for (let transfer of res.parachainBondTransfers) {
-      amount += BigInt(transfer.balance);
-    }
+    total += res.contractAddresses.length;
 
     startTimestamp = timeRange.end + 1;
   }
 
-  const amountInEth = ethers.utils.formatEther(amount);
-  writeToCsv([[amountInEth]], "total", network);
+  writeToCsv([[total]], "total", network);
 };
 
 main();

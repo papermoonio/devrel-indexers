@@ -6,7 +6,7 @@ import {
   getMonthlyTimeRange,
   START_TIMESTAMPS,
   PORTS,
-} from "./common/index.js";
+} from "../common/index.js";
 import { stringify } from "csv-stringify";
 
 const main = async () => {
@@ -32,7 +32,13 @@ const main = async () => {
 
   switch (args.interval) {
     case "daily":
-      await getDailyData(port, startTimestamp, endTimestamp, args.network);
+      await getDailyData(
+        port,
+        startTimestamp,
+        endTimestamp,
+        args.network,
+        args.network
+      );
       break;
     case "monthly":
       await getMonthlyData(port, startTimestamp, endTimestamp, args.network);
@@ -47,11 +53,11 @@ const main = async () => {
 
 const createQuery = (start, end) => {
   return `query {
-          stakingRewards(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
-              id
-              balance
-            }
-      }`;
+        parachainBondTransfers(where: {timestamp_gte: ${start}, AND: {timestamp_lt: ${end}}}) {
+            id
+            balance
+          }
+    }`;
 };
 
 const writeToCsv = (data, interval, network) => {
@@ -60,7 +66,7 @@ const writeToCsv = (data, interval, network) => {
     columns = { amount: "amount" };
   }
 
-  const filePath = `csv-files/${network}-${interval}-staking-rewards.csv`;
+  const filePath = `csv-files/${network}-${interval}-parachain-bond-reserve.csv`;
 
   stringify(data, { header: true, columns }, (e, output) => {
     if (e) throw e;
@@ -86,8 +92,8 @@ const getDailyData = async (port, start, end, network) => {
     const query = createQuery(currDay, currDay + msDay);
     const res = await fetchData(port, query);
 
-    for (let reward of res.stakingRewards) {
-      amount += BigInt(reward.balance);
+    for (let transfer of res.parachainBondTransfers) {
+      amount += BigInt(transfer.balance);
     }
 
     // convert timestamps to readable dates
@@ -115,8 +121,8 @@ const getMonthlyData = async (port, start, end, network) => {
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
 
-    for (let reward of res.stakingRewards) {
-      amount += BigInt(reward.balance);
+    for (let transfer of res.parachainBondTransfers) {
+      amount += BigInt(transfer.balance);
     }
 
     // convert timestamps to readable dates
@@ -141,8 +147,8 @@ const getTotalData = async (port, start, end, network) => {
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
 
-    for (let reward of res.stakingRewards) {
-      amount += BigInt(reward.balance);
+    for (let transfer of res.parachainBondTransfers) {
+      amount += BigInt(transfer.balance);
     }
 
     startTimestamp = timeRange.end + 1;

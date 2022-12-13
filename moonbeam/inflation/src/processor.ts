@@ -16,7 +16,7 @@ import {
 
 const processor = new SubstrateBatchProcessor()
   .setBatchSize(500) // ❗️ you may need to change this parameter if you get 500 errors related to timeouts
-  // .setBlockRange({ from: <insert>, to: <insert> }) 👈 you can define a block range by uncommenting this and inserting the block numbers
+  .setBlockRange({ from: 1772317 }) // 👈 you can define a block range by uncommenting this and inserting the block numbers
   .setDataSource({
     archive: lookupArchive("moonbeam", { release: "FireSquid" }),
     chain: "wss://moonbeam.api.onfinality.io/public-ws",

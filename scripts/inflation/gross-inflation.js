@@ -6,7 +6,7 @@ import {
   getMonthlyTimeRange,
   START_TIMESTAMPS,
   PORTS,
-} from "./common/index.js";
+} from "../common/index.js";
 import { stringify } from "csv-stringify";
 
 const main = async () => {
