@@ -1,0 +1,15 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/moonbeam",
+  "pallets": {
+    "ParachainStaking": {
+      "events": [
+        "Delegation",
+        "DelegatorLeft"
+      ],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}
