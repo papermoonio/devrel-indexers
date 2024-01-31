@@ -1,0 +1,17 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/moonriver",
+  "pallets": {
+    "ParachainStaking": {
+      "events": [
+        "Delegation",
+        "DelegatorLeft",
+        "Nomination",
+        "NominatorLeft"
+      ],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}
