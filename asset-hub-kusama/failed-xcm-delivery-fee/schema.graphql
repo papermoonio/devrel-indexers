@@ -1,0 +1,8 @@
+type Transfer @entity {
+  id: ID!
+  blockNumber: Int! @index
+  from: String!
+  to: String!
+  amount: BigInt! @index
+  assetID: Int! @index
+}

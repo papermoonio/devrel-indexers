@@ -1,0 +1,18 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/asset-hub-kusama",
+  "pallets": {
+    "PolkadotXcm": {
+      "events": ["Attempted"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    },
+    "Assets": {
+      "events": ["Transferred"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}
