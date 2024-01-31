@@ -1,0 +1,24 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/kusama",
+  "pallets": {
+    "XcmPallet": {
+      "events": ["Attempted"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    },
+    "Balances": {
+      "events": ["Transfer", "Deposit"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    },
+    "MessageQueue": {
+      "events": ["Processed"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}

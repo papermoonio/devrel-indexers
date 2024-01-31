@@ -1,0 +1,79 @@
+[
+  {
+    "blockNumber": 21573927,
+    "amount": "193552087806000",
+    "from": "FcRfpcdqeViSYFHFRchnqpxktYMeNg8A9dxSE828QFWhhNZ",
+    "id": "0021573927-f94ef-000047",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21576212,
+    "amount": "21996150000",
+    "from": "FcW8WdrjoPdVLUFPWEyrRZA24bvS7Cx8PKCS3iiX7E1haGJ",
+    "id": "0021576212-d427e-000042",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21579329,
+    "amount": "107217134466000",
+    "from": "JFFw9RfZ6527u4mefZrE5hjzdB3NvV82Zfu44CJ3W3f6dnX",
+    "id": "0021579329-e64cc-000021",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21581683,
+    "amount": "9832709199",
+    "from": "Parachain 2001 - dgRUb8Nh6qA4ZxTHrhwMSGXjTzHaMwaFc8HsMCzpS9jjBoW - https://bifrost-kusama.subscan.io/extrinsic/5890904-2?event=5890904-9&tab=xcm_transfer",
+    "id": "0021581683-46921-000003",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21582439,
+    "amount": "11593960025",
+    "from": "Parachain 2001 - edjPQn1n8MDxGoFNtYEBvcxPRf6gE2S7BKgQxQu8gZknycs - https://bifrost-kusama.subscan.io/extrinsic/5891160-2?event=5891160-6&tab=xcm_transfer",
+    "id": "0021582439-2a20a-000003",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21583225,
+    "amount": "100290626722",
+    "from": "Parachain 2000 - r4SoBpxKYpUpXGTGtNpTzcP2L8faPD8xQExZG6vj55Q94SZ - https://karura.subscan.io/extrinsic/6138236-3?event=6138236-34&tab=xcm_transfer",
+    "id": "0021583225-81d24-000004",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21587554,
+    "amount": "9832709199",
+    "from": "Parachain 2001 - ffm75STKAACSqbnc6j16Nkm9h9i2VtjTvHXpkZy32QxsD2s - https://bifrost-kusama.subscan.io/extrinsic/5892906-2?event=5892906-5&tab=xcm_transfer",
+    "id": "0021587554-d471c-000004",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21588460,
+    "amount": "1517360819000",
+    "from": "JFFw9RfZ6527u4mefZrE5hjzdB3NvV82Zfu44CJ3W3f6dnX",
+    "id": "0021588460-202b6-000039",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21589429,
+    "amount": "154997802516000",
+    "from": "Dfi679UVN5LTQbPX5wT1brdrzAHthu4P3LgVSaC8dhvprk8",
+    "id": "0021589429-2b447-000046",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21590503,
+    "amount": "10174891000",
+    "from": "FcW8WdrjoPdVLUFPWEyrRZA24bvS7Cx8PKCS3iiX7E1haGJ",
+    "id": "0021590503-c3dde-000045",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21594113,
+    "amount": "22255803745000",
+    "from": "J6k9HwMJS2bxs3MNSwMmfYGUoqmX12g61nD46v1kdtLWj3V",
+    "id": "0021594113-ffa51-000042",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  }
+]
