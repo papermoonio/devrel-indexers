@@ -23,28 +23,28 @@
   {
     "blockNumber": 21581683,
     "amount": "9832709199",
-    "from": "Parachain 2001 - dgRUb8Nh6qA4ZxTHrhwMSGXjTzHaMwaFc8HsMCzpS9jjBoW - https://bifrost-kusama.subscan.io/extrinsic/5890904-2?event=5890904-9&tab=xcm_transfer",
+    "from": "NULL",
     "id": "0021581683-46921-000003",
     "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
   },
   {
     "blockNumber": 21582439,
     "amount": "11593960025",
-    "from": "Parachain 2001 - edjPQn1n8MDxGoFNtYEBvcxPRf6gE2S7BKgQxQu8gZknycs - https://bifrost-kusama.subscan.io/extrinsic/5891160-2?event=5891160-6&tab=xcm_transfer",
+    "from": "NULL",
     "id": "0021582439-2a20a-000003",
     "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
   },
   {
     "blockNumber": 21583225,
     "amount": "100290626722",
-    "from": "Parachain 2000 - r4SoBpxKYpUpXGTGtNpTzcP2L8faPD8xQExZG6vj55Q94SZ - https://karura.subscan.io/extrinsic/6138236-3?event=6138236-34&tab=xcm_transfer",
+    "from": "NULL",
     "id": "0021583225-81d24-000004",
     "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
   },
   {
     "blockNumber": 21587554,
     "amount": "9832709199",
-    "from": "Parachain 2001 - ffm75STKAACSqbnc6j16Nkm9h9i2VtjTvHXpkZy32QxsD2s - https://bifrost-kusama.subscan.io/extrinsic/5892906-2?event=5892906-5&tab=xcm_transfer",
+    "from": "NULL",
     "id": "0021587554-d471c-000004",
     "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
   },
@@ -74,6 +74,34 @@
     "amount": "22255803745000",
     "from": "J6k9HwMJS2bxs3MNSwMmfYGUoqmX12g61nD46v1kdtLWj3V",
     "id": "0021594113-ffa51-000042",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21698172,
+    "amount": "9761780645",
+    "from": "NULL",
+    "id": "0021698172-d4372-000003",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21698545,
+    "amount": "7050554022",
+    "from": "NULL",
+    "id": "0021698545-d495d-000003",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21698621,
+    "amount": "50869219509",
+    "from": "NULL",
+    "id": "0021698621-3767e-000004",
+    "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
+  },
+  {
+    "blockNumber": 21747850,
+    "amount": "5757290626722",
+    "from": "NULL",
+    "id": "0021747850-adb4e-000003",
     "to": "F7fq1jSB3w59f8vMShxvP5eSu3wCJbL5Am5MQ6vP6VzYLWD"
   }
 ]

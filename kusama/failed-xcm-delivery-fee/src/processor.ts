@@ -27,7 +27,7 @@ export const processor = new SubstrateBatchProcessor()
       url: assertNotNull(process.env.RPC_ENDPOINT),
     },
   })
-  .setBlockRange({ from: 21561113, to: 21647390 })
+  .setBlockRange({ from: 21561113, to: 21761410 })
   .addEvent({
     name: [
       events.balances.transfer.name,
