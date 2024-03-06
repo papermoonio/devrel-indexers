@@ -1,0 +1,18 @@
+# Number of addresses 
+type Address @entity {
+  id: ID! # The address
+  isContract: Boolean! # Whether it is a contract or EOA
+}
+
+# Number of transactions for EVM & Substrate (includes contract transactions)
+type Transaction @entity {
+  id: ID!
+  blockNo: Int! # Block number the transaction was sent
+  evm: Boolean! # Whether it is an EVM or Substrate transaction
+  isSuccess: Boolean! # Whether it was successful or failed
+  hash: String # Transaction hash
+  sender: String # Transaction sender
+  receiver: String # Transaction receiver
+  gasUsed: BigInt # Gas consumed
+  type: String # Can be either: 'Balance Transfer', 'Contract Call', or 'Contract Create'
+}
