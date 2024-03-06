@@ -139,9 +139,8 @@ const processEvmTransactions = (
       // Extract weight info from 'System.ExtrinsicSuccess' events. Note: If an EVM
       // transaction fails, it's reported in the 'Ethereum.Executed' event
       if (event.name === 'System.ExtrinsicSuccess') {
-        console.log('hiiii')
         transaction.gasUsed = BigInt(
-          event.args.dispatchInfo.weight / weightPerGas
+          event.args.dispatchInfo.weight.refTime / weightPerGas
         );
       }
     }
