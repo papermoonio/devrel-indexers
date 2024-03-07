@@ -9,6 +9,9 @@ export class Address {
     @PrimaryColumn_()
     id!: string
 
+    @Column_("text", {nullable: false})
+    chainId!: string
+
     @Column_("bool", {nullable: false})
     isContract!: boolean
 }

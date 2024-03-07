@@ -10,6 +10,9 @@ export class Transaction {
     @PrimaryColumn_()
     id!: string
 
+    @Column_("text", {nullable: false})
+    chainId!: string
+
     @Column_("int4", {nullable: false})
     blockNo!: number
 

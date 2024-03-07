@@ -1,9 +1,10 @@
 import { TypeormDatabase } from '@subsquid/typeorm-store';
-import { In, Not } from 'typeorm';
+import { In } from 'typeorm';
 import { processor, Call, Event } from './processor';
 import { Address, Transaction } from './model';
 
 const weightPerGas = 25000;
+const chainId = process.env.chainId || '';
 
 processor.run(new TypeormDatabase(), async (ctx) => {
   const transactions: Transaction[] = [];
@@ -84,7 +85,8 @@ const processEvmTransactions = (
   // Process EVM transactions
   const transaction: Transaction = {
     id: call.id,
-    blockNo: blockNo,
+    chainId,
+    blockNo,
     evm: true,
     isSuccess: true,
     hash: undefined,
@@ -122,13 +124,15 @@ const processEvmTransactions = (
         const sender = {
           id: event.args.from,
           isContract: false,
-        }
+          chainId,
+        };
         addressesFromEvmTx.push(sender);
 
         // Extract receiver to save to addresses
         const receiver = {
           id: event.args.to,
           isContract: transaction.type === 'Balance Transfer' ? false : true,
+          chainId,
         };
         addressesFromEvmTx.push(receiver);
 
@@ -161,7 +165,8 @@ const processSubstrateTransactions = (
   // Process Substrate transactions
   const transaction: Transaction = {
     id: batchId == 0 ? call.id : `${call.id}-${batchId}`,
-    blockNo: blockNo,
+    chainId,
+    blockNo,
     evm: false,
     isSuccess: true,
     hash: call.extrinsic?.hash,
@@ -184,6 +189,7 @@ const processSubstrateTransactions = (
         const sender = {
           id: event.args.who,
           isContract: false,
+          chainId,
         };
         addressesFromSubstrateTx.push(sender);
       }
@@ -194,6 +200,7 @@ const processSubstrateTransactions = (
         const receiver = {
           id: event.args.who,
           isContract: false,
+          chainId,
         };
         addressesFromSubstrateTx.push(receiver);
       }

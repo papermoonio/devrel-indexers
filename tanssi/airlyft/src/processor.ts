@@ -18,7 +18,8 @@ export const processor = new SubstrateBatchProcessor()
   })
   .setBlockRange({ from: 0 })
   .addCall({ // Get all calls w/ their extrinsics, so we can grab the extrinsic hash
-    extrinsic: true
+    extrinsic: true,
+    events: true
   })
   .addEvent({
     name: [
