@@ -8,6 +8,7 @@ import {
   Call as _Call,
   Extrinsic as _Extrinsic,
 } from '@subsquid/substrate-processor';
+import { events } from './types';
 
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
@@ -17,21 +18,26 @@ export const processor = new SubstrateBatchProcessor()
     },
   })
   .setBlockRange({ from: 0 })
-  .addCall({ // Get all calls w/ their extrinsics, so we can grab the extrinsic hash
-    extrinsic: true,
-    events: true
+  .addCall({
+    extrinsic: true, // Get all extrinsics so we can grab the hash and the success fields
+    events: true, // Get all events so we can look at events like Ethereum.Executed, etc.
   })
   .addEvent({
     name: [
-      'System.ExtrinsicSuccess',
-      'System.ExtrinsicFailed'
+      // Get extrinsic failed and success events (since they're not included in call events)
+      events.system.extrinsicFailed.name,
+      events.system.extrinsicSuccess.name,
     ],
-  }) // Get all events
+  })
   .setFields({
     extrinsic: {
       hash: true, // Grab extrinsic hash
-    }
-  })
+      success: true, // Grab result for Substrate extrinsics
+    },
+    call: {
+      origin: true, // Get the sender of the call
+    },
+  });
 
 export type Fields = SubstrateBatchProcessorFields<typeof processor>;
 export type Block = BlockHeader<Fields>;

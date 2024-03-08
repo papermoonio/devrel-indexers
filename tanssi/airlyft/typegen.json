@@ -1,0 +1,30 @@
+{
+    "outDir": "src/types",
+    "specVersions": "metadata.jsonl",
+    "pallets": {
+        "System": {
+            "events": [
+                "ExtrinsicSuccess",
+                "ExtrinsicFailed"
+            ]
+        },
+        "Ethereum": {
+            "calls": [
+                "transact"
+            ],
+            "events": [
+                "Executed"
+            ]
+        },
+        "Balances": {
+            "events": [
+                "Transfer"
+            ],
+            "calls": [
+                "transfer_all",
+                "transfer_allow_death",
+                "transfer_keep_alive"
+            ]
+        }
+    }
+}

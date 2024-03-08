@@ -2,25 +2,22 @@ import { TypeormDatabase } from '@subsquid/typeorm-store';
 import { In } from 'typeorm';
 import { processor, Call, Event } from './processor';
 import { Address, Transaction } from './model';
+import { calls, events } from './types';
 
-const weightPerGas = 25000;
-const chainId = process.env.chainId || '';
+const weightPerGas = 25000n;
+const chainId = process.env.CHAIN_ID || '';
 
 processor.run(new TypeormDatabase(), async (ctx) => {
   const transactions: Transaction[] = [];
   const addresses: Address[] = [];
 
   for (const block of ctx.blocks) {
-    // For handling batch transactions
-    let batchCounter = 0;
-    let currentBatchId = '';
-
     // There are four system extrinsics: 'ParachainSystem.set_validation_data', 'Timestamp.set'
     // 'AuthorNoting.set_latest_author_data', and 'AuthorInherent.kick_off_authorship_validation'.
     // System extrinsics will be at index 0-3, so we can skip ahead to the
     // extrinsic starting at index 4
     for (let i = 4; i < block.calls.length; i++) {
-      if (block.calls[i].name === 'Ethereum.transact') {
+      if (block.calls[i].name === calls.ethereum.transact.name) {
         // Process EVM transactions
         const { evmTx, addressesFromEvmTx } = processEvmTransactions(
           block.header.height,
@@ -31,27 +28,11 @@ processor.run(new TypeormDatabase(), async (ctx) => {
         addresses.push(...addressesFromEvmTx);
       } else {
         // Process Substrate transactions
-
-        // Handle batch transactions
-        // If it's a batch transaction, the args object will contain a calls object
-        if (block.calls[i].args && block.calls[i].args.calls) {
-          if (currentBatchId == block.calls[i].id) {
-            // Second, third, etc. call of the batch call, so all we need to do is
-            // increment the batch counter
-            batchCounter++;
-          } else {
-            // First call of the batch call
-            currentBatchId = block.calls[i].id;
-            batchCounter = 1;
-          }
-        }
-
         const { substrateTx, addressesFromSubstrateTx } =
           processSubstrateTransactions(
             block.header.height,
             block.events,
-            block.calls[i],
-            batchCounter
+            block.calls[i]
           );
         transactions.push(substrateTx);
         addresses.concat(addressesFromSubstrateTx);
@@ -76,7 +57,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
 
 const processEvmTransactions = (
   blockNo: number,
-  events: Event[],
+  blockEvents: Event[],
   call: Call
 ): { evmTx: Transaction; addressesFromEvmTx: Address[] } => {
   const extrinsicIndex = call.extrinsicIndex;
@@ -96,13 +77,16 @@ const processEvmTransactions = (
     type: undefined,
   };
 
-  if (call.args.transaction.value.action.__kind == 'Call') {
+  const {
+    transaction: {
+      value: { input, value, action },
+    },
+  } = calls.ethereum.transact.v100.decode(call);
+
+  if (action.__kind == 'Call') {
     // In this case, it can be either a contract interaction or a balance transfer
     // If the input is '0x' and the value is greater than 0, it's a balance transfer
-    if (
-      call.args.transaction.value.input == '0x' &&
-      call.args.transaction.value.value > 0
-    ) {
+    if (input == '0x' && value > 0) {
       transaction.type = 'Balance Transfer';
     } else {
       transaction.type = 'Contract Call';
@@ -112,40 +96,42 @@ const processEvmTransactions = (
     transaction.type = 'Contract Create';
   }
 
-  for (const event of events) {
+  for (const event of blockEvents) {
     if (event.extrinsicIndex == extrinsicIndex) {
       // Extract sender and receiver data from 'Ethereum.Executed' events
-      if (event.name === 'Ethereum.Executed') {
-        transaction.sender = event.args.from;
-        transaction.receiver = event.args.to;
-        transaction.hash = event.args.transactionHash;
+      if (event.name === events.ethereum.executed.name) {
+        const { from, to, transactionHash, exitReason } =
+          events.ethereum.executed.v100.decode(event);
 
-        // Extract sender to save to addresses
+        transaction.sender = from;
+        transaction.receiver = to;
+        transaction.hash = transactionHash;
+        transaction.isSuccess = exitReason.__kind === 'Succeed' ? true : false;
+
+        // Save sender and receiver addresses
         const sender = {
-          id: event.args.from,
+          id: from,
           isContract: false,
           chainId,
         };
-        addressesFromEvmTx.push(sender);
-
-        // Extract receiver to save to addresses
         const receiver = {
-          id: event.args.to,
+          id: to,
           isContract: transaction.type === 'Balance Transfer' ? false : true,
           chainId,
         };
+        addressesFromEvmTx.push(sender);
         addressesFromEvmTx.push(receiver);
-
-        if (event.args.exitReason.__kind !== 'Succeed') {
-          transaction.isSuccess = false;
-        }
       }
+
       // Extract weight info from 'System.ExtrinsicSuccess' events. Note: If an EVM
       // transaction fails, it's reported in the 'Ethereum.Executed' event
-      if (event.name === 'System.ExtrinsicSuccess') {
-        transaction.gasUsed = BigInt(
-          event.args.dispatchInfo.weight.refTime / weightPerGas
-        );
+      if (event.name === events.system.extrinsicSuccess.name) {
+        const {
+          dispatchInfo: {
+            weight: { refTime },
+          },
+        } = events.system.extrinsicSuccess.v100.decode(event);
+        transaction.gasUsed = refTime / weightPerGas;
       }
     }
   }
@@ -155,57 +141,79 @@ const processEvmTransactions = (
 
 const processSubstrateTransactions = (
   blockNo: number,
-  events: Event[],
-  call: Call,
-  batchId: number
+  blockEvents: Event[],
+  call: Call
 ): { substrateTx: Transaction; addressesFromSubstrateTx: Address[] } => {
   const addressesFromSubstrateTx: Address[] = [];
   const extrinsicIndex = call.extrinsicIndex;
 
   // Process Substrate transactions
   const transaction: Transaction = {
-    id: batchId == 0 ? call.id : `${call.id}-${batchId}`,
+    id: call.id,
     chainId,
     blockNo,
     evm: false,
     isSuccess: true,
     hash: call.extrinsic?.hash,
-    sender: undefined,
+    sender: call.origin.value.value,
     receiver: undefined,
     gasUsed: undefined, // EVM only
     type: undefined, // EVM only
   };
 
-  for (const event of events) {
-    if (event.extrinsicIndex == extrinsicIndex) {
-      // Check if the extrinsic failed using the 'System.ExtrinsicFailed' event
-      if (event.name === 'System.ExtrinsicFailed') {
-        transaction.isSuccess = false;
-      }
-      if (event.name === 'Balances.Withdraw') {
-        transaction.sender = event.args.who;
-
-        // Extract sender to save to addresses
-        const sender = {
-          id: event.args.who,
-          isContract: false,
-          chainId,
-        };
-        addressesFromSubstrateTx.push(sender);
-      }
-      if (event.name === 'Balances.Deposit') {
-        transaction.receiver = event.args.who;
-
-        // Extract receiver to save to addresses
-        const receiver = {
-          id: event.args.who,
-          isContract: false,
-          chainId,
-        };
-        addressesFromSubstrateTx.push(receiver);
+  // Get the status of the extrinsic
+  if (call.extrinsic) {
+    transaction.isSuccess = call.extrinsic.success;
+  } else {
+    for (const event of blockEvents) {
+      if (event.extrinsicIndex == extrinsicIndex) {
+        if (event.name === events.system.extrinsicFailed.name) {
+          transaction.isSuccess = false;
+        }
       }
     }
   }
+
+  // Get the receiver for balance transfers
+  if (call.name === calls.balances.transferAll.name) {
+    const { dest } = calls.balances.transferAll.v100.decode(call);
+    transaction.receiver = dest;
+    const receiver = {
+      id: dest,
+      isContract: false,
+      chainId,
+    };
+    addressesFromSubstrateTx.push(receiver);
+  }
+  if (call.name === calls.balances.transferAllowDeath.name) {
+    const { dest } = calls.balances.transferAllowDeath.v100.decode(call);
+    transaction.receiver = dest;
+    const receiver = {
+      id: dest,
+      isContract: false,
+      chainId,
+    };
+    addressesFromSubstrateTx.push(receiver);
+  }
+  if (call.name === calls.balances.transferKeepAlive.name) {
+    const { dest } = calls.balances.transferKeepAlive.v100.decode(call);
+    transaction.receiver = dest;
+    const receiver = {
+      id: dest,
+      isContract: false,
+      chainId,
+    };
+    addressesFromSubstrateTx.push(receiver);
+  }
+
+  // Save the sender's address
+  const sender = {
+    id: call.origin.value.value,
+    isContract: false,
+    chainId,
+  };
+  addressesFromSubstrateTx.push(sender);
+
   return {
     substrateTx: new Transaction(transaction),
     addressesFromSubstrateTx,
