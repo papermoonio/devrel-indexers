@@ -1,0 +1,8 @@
+# Registration on Tanssi
+type ParachainIdRegistration @entity {
+  id: ID!
+  blockNo: Int! # The block number the registration occurred
+  timestamp: String! # The timestamp the registration occurred
+  paraId: Int! # The parachain ID registered
+  sender: String! # The account that sent the registration extrinsic
+}

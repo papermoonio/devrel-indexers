@@ -1,0 +1,11 @@
+{
+    "outDir": "src/types",
+    "specVersions": "metadata.jsonl",
+    "pallets": {
+        "PooledStaking": {
+            "events": [
+                "ExecutedDelegate"
+            ]
+        }
+    }
+}
