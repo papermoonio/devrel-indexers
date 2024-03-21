@@ -18,5 +18,8 @@ export class Delegation {
     blockNo!: number
 
     @Column_("text", {nullable: false})
+    timestamp!: string
+
+    @Column_("text", {nullable: false})
     candidate!: string
 }

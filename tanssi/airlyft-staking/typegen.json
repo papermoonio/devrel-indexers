@@ -4,7 +4,8 @@
     "pallets": {
         "PooledStaking": {
             "events": [
-                "ExecutedDelegate"
+                "ExecutedDelegate",
+                "ExecutedUndelegate"
             ]
         }
     }

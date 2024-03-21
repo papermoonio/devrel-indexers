@@ -19,3 +19,18 @@ export const executedDelegate =  {
         })
     ),
 }
+
+export const executedUndelegate =  {
+    name: 'PooledStaking.ExecutedUndelegate',
+    /**
+     * Undelegation request was executed.
+     */
+    v201: new EventType(
+        'PooledStaking.ExecutedUndelegate',
+        sts.struct({
+            candidate: v201.AccountId32,
+            delegator: v201.AccountId32,
+            released: sts.bigint(),
+        })
+    ),
+}

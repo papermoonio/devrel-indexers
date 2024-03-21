@@ -147,7 +147,7 @@
         "opener"
       ]
     },
-    "process:prod:YOUR_CHAIN_ID": {
+    "process:prod": {
       "description": "Start the squid processor",
       "deps": [
         "migration:apply"

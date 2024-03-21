@@ -13,13 +13,21 @@ import { events } from './types';
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
     chain: {
-      url: assertNotNull(process.env.RPC_ENDPOINT)
+      url: assertNotNull(process.env.RPC_ENDPOINT),
     },
   })
-  .setBlockRange({ from: 273003 }) // Pooled Staking was introduced in RT 201
+  .setBlockRange({ from: 1301184 }) // Pooled Staking was introduced in RT 201
   .addEvent({
-    name: [events.pooledStaking.executedDelegate.name],
+    name: [
+      events.pooledStaking.executedDelegate.name,
+      events.pooledStaking.executedUndelegate.name,
+    ],
   })
+  .setFields({
+    block: {
+      timestamp: true, // Get the timestamp of the block
+    },
+  });
 
 export type Fields = SubstrateBatchProcessorFields<typeof processor>;
 export type Block = BlockHeader<Fields>;
