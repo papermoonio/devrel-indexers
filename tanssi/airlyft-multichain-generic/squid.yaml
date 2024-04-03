@@ -1,0 +1,19 @@
+manifestVersion: subsquid.io/v0.1
+name: airlyft
+version: 1
+description: Substrate squid template
+build:
+deploy:
+  addons:
+    postgres:
+  processor:
+    - name: 3035-processor
+      cmd: ['sqd', 'process:3035']
+    - name: 3085-processor
+      cmd: ['sqd', 'process:3085']
+    - name: 3094-processor
+      cmd: ['sqd', 'process:3094']
+  api:
+    cmd:
+      - sqd
+      - serve:prod
