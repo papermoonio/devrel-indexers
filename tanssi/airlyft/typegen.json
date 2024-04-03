@@ -5,7 +5,8 @@
         "System": {
             "events": [
                 "ExtrinsicSuccess",
-                "ExtrinsicFailed"
+                "ExtrinsicFailed",
+                "NewAccount"
             ]
         },
         "Ethereum": {
@@ -24,6 +25,16 @@
                 "transfer_all",
                 "transfer_allow_death",
                 "transfer_keep_alive"
+            ]
+        },
+        "Utility": {
+            "events": [
+                "BatchCompleted",
+                "BatchInterrupted"
+            ],
+            "calls": [
+                "batch",
+                "batch_all"
             ]
         }
     }

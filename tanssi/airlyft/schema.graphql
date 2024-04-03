@@ -1,20 +1,52 @@
-# Number of addresses 
-type Address @entity {
-  id: ID! # The address
-  chainId: String! # The ID of the chain this address belongs to
-  isContract: Boolean! # Whether it is a contract or EOA
+# Statistics for each chain
+type Chain @entity {
+  id: ID! # The chain ID
+  transactions: [Transaction!]! @derivedFrom(field: "chain") # List of transactions on this chain
+  totalTransactions: BigInt! # The total number of transactions on this chain
+  totalContractCalls: BigInt! # The total number of contract calls on this chain
+  totalContractsCreated: BigInt! # The total number of contracts created on this chain
+  totalGasUsed: BigInt! # The total gas used by this chain
+  uniqueAddressesCount: BigInt! # The total number of unique addresses on this chain
+  addresses: [AddressChainConnection]! @derivedFrom(field: "chain") # List of addresses on this chain
 }
 
-# Number of transactions for EVM & Substrate (includes contract transactions)
+# Join table for chains and addresses as an address can exist on many chains, and a chain has many addresses
+type AddressChainConnection @entity {
+  id: ID! # The chain ID + the address
+  address: Address! # The address
+  chain: Chain! # The chain the address exists on
+  isContract: Boolean! # Whether the address is a contract address or an EOA
+  transactionsSent: [Transaction]! @derivedFrom(field: "sender") # List of transactions sent
+  transactionsReceived: [Transaction]! @derivedFrom(field: "receiver") # List of transactions received
+  totalTransactions: BigInt! # The total number of transactions sent by this address on this chain
+  totalContractCalls: BigInt! # The total number of contract calls for this address on this chain
+  totalContractsCreated: BigInt! # The total number of contracts created for this address on this chain
+  totalGasUsed: BigInt! # The total gas used for this address on this chain
+}
+
+# Transaction data for EVM and Substrate transactions
 type Transaction @entity {
-  id: ID!
-  chainId: String! # The ID of the chain this address belongs to
-  blockNo: Int! # Block number the transaction was sent
-  evm: Boolean! # Whether it is an EVM or Substrate transaction
-  isSuccess: Boolean! # Whether it was successful or failed
-  hash: String # Transaction hash
-  sender: String # Transaction sender
-  receiver: String # Transaction receiver
-  gasUsed: BigInt # Gas consumed
-  type: String # Can be either: 'Balance Transfer', 'Contract Call', or 'Contract Create'
+  id: ID! # The chain ID + the call ID
+  chain: Chain! # The chain the transaction was executed on
+  blockNo: Int! # The transaction's block number 
+  timestamp: String! # The transaction's timestamp
+  isEvm: Boolean! # Whether it is an EVM or Substrate transaction
+  hash: String! # The Substrate extrinsic or EVM transaction hash
+  sender: AddressChainConnection! # Transaction sender
+  receiver: AddressChainConnection # Transaction receiver
+  gasUsed: BigInt! # Gas consumed. For EVM transactions only
+  type: TransactionType # The type of EVM transaction. For EVM transactions only
+}
+
+# The type of EVM transactions
+enum TransactionType {
+  BALANCE_TRANSFER
+  CONTRACT_CALL
+  CONTRACT_CREATION
+}
+
+# Statistics for each address
+type Address @entity {
+  id: ID! # The address
+  chains: [AddressChainConnection]! @derivedFrom(field: "address") # List of chains this address interacts with
 }

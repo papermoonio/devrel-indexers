@@ -1,0 +1,1 @@
+export { UserLeaderboardResolver } from '../resolver'

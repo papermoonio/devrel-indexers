@@ -1,5 +1,8 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
 import * as marshal from "./marshal"
+import {Chain} from "./chain.model"
+import {AddressChainConnection} from "./addressChainConnection.model"
+import {TransactionType} from "./_transactionType"
 
 @Entity_()
 export class Transaction {
@@ -10,30 +13,33 @@ export class Transaction {
     @PrimaryColumn_()
     id!: string
 
-    @Column_("text", {nullable: false})
-    chainId!: string
+    @Index_()
+    @ManyToOne_(() => Chain, {nullable: true})
+    chain!: Chain
 
     @Column_("int4", {nullable: false})
     blockNo!: number
 
-    @Column_("bool", {nullable: false})
-    evm!: boolean
+    @Column_("text", {nullable: false})
+    timestamp!: string
 
     @Column_("bool", {nullable: false})
-    isSuccess!: boolean
+    isEvm!: boolean
 
-    @Column_("text", {nullable: true})
-    hash!: string | undefined | null
+    @Column_("text", {nullable: false})
+    hash!: string
 
-    @Column_("text", {nullable: true})
-    sender!: string | undefined | null
+    @Index_()
+    @ManyToOne_(() => AddressChainConnection, {nullable: true})
+    sender!: AddressChainConnection
 
-    @Column_("text", {nullable: true})
-    receiver!: string | undefined | null
+    @Index_()
+    @ManyToOne_(() => AddressChainConnection, {nullable: true})
+    receiver!: AddressChainConnection | undefined | null
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-    gasUsed!: bigint | undefined | null
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+    gasUsed!: bigint
 
-    @Column_("text", {nullable: true})
-    type!: string | undefined | null
+    @Column_("varchar", {length: 17, nullable: true})
+    type!: TransactionType | undefined | null
 }

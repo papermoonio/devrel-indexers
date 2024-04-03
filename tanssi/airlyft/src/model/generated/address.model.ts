@@ -1,4 +1,5 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_} from "typeorm"
+import {AddressChainConnection} from "./addressChainConnection.model"
 
 @Entity_()
 export class Address {
@@ -9,9 +10,6 @@ export class Address {
     @PrimaryColumn_()
     id!: string
 
-    @Column_("text", {nullable: false})
-    chainId!: string
-
-    @Column_("bool", {nullable: false})
-    isContract!: boolean
+    @OneToMany_(() => AddressChainConnection, e => e.address)
+    chains!: AddressChainConnection[]
 }

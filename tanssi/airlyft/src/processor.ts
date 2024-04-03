@@ -14,7 +14,7 @@ export const processor = new SubstrateBatchProcessor()
   .setDataSource({
     chain: {
       url: assertNotNull(process.env.RPC_ENDPOINT),
-      rateLimit: 10,
+      rateLimit: 100000,
     },
   })
   .setBlockRange({ from: 0 })
@@ -37,6 +37,9 @@ export const processor = new SubstrateBatchProcessor()
     call: {
       origin: true, // Get the sender of the call
     },
+    block: {
+      timestamp: true
+    }
   });
 
 export type Fields = SubstrateBatchProcessorFields<typeof processor>;

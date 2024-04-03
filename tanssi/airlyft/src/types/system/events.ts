@@ -27,3 +27,16 @@ export const extrinsicFailed =  {
         })
     ),
 }
+
+export const newAccount =  {
+    name: 'System.NewAccount',
+    /**
+     * A new account was created.
+     */
+    v100: new EventType(
+        'System.NewAccount',
+        sts.struct({
+            account: v100.AccountId20,
+        })
+    ),
+}
