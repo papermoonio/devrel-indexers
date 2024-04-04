@@ -1,51 +1,18 @@
 import { Arg, Field, ObjectType, Query, Resolver } from 'type-graphql';
 import type { EntityManager } from 'typeorm';
-import { Between, LessThanOrEqual } from 'typeorm';
-import { AddressChainConnection, Transaction, TransactionType } from '../model';
-import { createLogger } from '@subsquid/logger';
+import { Transaction } from '../model';
 
-/**
- * We need the custom resolver to get the following pieces of data:
- *
- * - The total number of transactions across all appchains
- * - The total number of contract calls across all appchains
- * - The total gas consumed across all appchains
- *
- * When we've got those things down, we need to be able to get the daily transaction count
- * and therefore the ranking of addresses by daily transactions for a given day.
- *
- */
-
-const LOG = createLogger('sqd:graphql-server:my-resolver');
-
+// To use logging, uncomment these two lines:
+// import { createLogger } from '@subsquid/logger';
+// const LOG = createLogger('sqd:graphql-server:my-resolver');
+  
 @ObjectType()
-class UserTotals {
+class UserStats {
   @Field(() => String)
   address!: string;
 
-  @Field(() => String)
-  numberOfAppchains!: string;
-
-  @Field(() => String)
-  totalTransactions!: string;
-
-  @Field(() => String)
-  totalContractCalls!: string;
-
-  @Field(() => String)
-  totalGasConsumed!: string;
-}
-
-@ObjectType()
-class DailyTransactionRanking {
-  @Field(() => String)
-  date!: string;
-
-  @Field(() => String)
-  address!: string;
-
-  @Field(() => String)
-  numberOfAppchains!: string;
+  @Field(() => [String])
+  interactedAppchains!: string[];
 
   @Field(() => String)
   totalTransactions!: string;
@@ -61,148 +28,52 @@ class DailyTransactionRanking {
 export class UserLeaderboardResolver {
   constructor(private tx: () => Promise<EntityManager>) {}
 
-  @Query(() => [UserTotals])
-  async userTotals(
-    @Arg('addresses', () => [String]) addresses: string[]
-  ): Promise<UserTotals[]> {
+  @Query(() => [UserStats]) // Decorate with appropriate return type
+  async userStats(
+    @Arg('addresses', () => [String]) addresses: string[],
+    @Arg('date', { nullable: true }) date: string, // If no date, get the current totals
+    @Arg('limit', { nullable: true }) limit: number, // If no limit, get all results
+    @Arg('offset', { nullable: true }) offset: number // If no offset, get results starting from index 0
+  ): Promise<UserStats[]> {
     const manager = await this.tx();
-    const results: UserTotals[] = [];
 
-    for (const address of addresses) {
-      const [transactions, totalTransactions] = await manager
-        .getRepository(Transaction)
-        .findAndCount({
-          where: {
-            sender: {
-              address: {
-                id: address,
-              },
-            },
-          },
-        });
-
-      // Calculate total gas used by summing up gasUsed field of all transactions
-      let totalGasConsumed = 0n;
-      for (const transaction of transactions) {
-        totalGasConsumed += transaction.gasUsed;
-      }
-
-      const [___, totalContractCalls] = await manager
-        .getRepository(Transaction)
-        .findAndCount({
-          where: {
-            sender: {
-              address: {
-                id: address,
-              },
-            },
-            type: TransactionType.CONTRACT_CALL,
-          },
-        });
-
-      const [_, numberOfAppchains] = await manager
-        .getRepository(AddressChainConnection)
-        .findAndCount({
-          where: {
-            address: {
-              id: address,
-            },
-          },
-        });
-
-      const userTotals: UserTotals = {
-        address,
-        numberOfAppchains: `${numberOfAppchains}`,
-        totalTransactions: `${totalTransactions}`,
-        totalContractCalls: `${totalContractCalls}`,
-        totalGasConsumed: `${totalGasConsumed}`,
-      };
-      results.push(userTotals);
+    // Make sure we're getting all transactions up until EOD of the provided date
+    let dataToDate = new Date();
+    if (date) {
+      dataToDate = new Date(date);
+      dataToDate.setUTCHours(23, 59, 59, 999);
     }
 
-    return results;
-  }
+    let query = `
+      SELECT 
+        "address_chain_connection"."address_id" AS address,
+        SUM(CASE WHEN "transaction"."type" = 'CONTRACT_CALL' THEN 1 ELSE 0 END) AS "totalContractCalls",
+        COUNT("transaction"."id") AS "totalTransactions",
+        SUM("transaction"."gas_used") AS "totalGasConsumed",
+        ARRAY_AGG(DISTINCT "transaction"."chain_id") AS "interactedAppchains"
+      FROM "transaction"
+      LEFT JOIN "address_chain_connection" ON "address_chain_connection"."id" = "transaction"."sender_id"
+      LEFT JOIN "address" ON "address"."id" = "address_chain_connection"."address_id"
+      WHERE CAST("transaction"."timestamp" AS BIGINT) <= ${dataToDate.getTime()} AND "address"."id" IN (${
+      "'" + addresses.join("','") + "'"
+    })
+      GROUP BY "address_chain_connection"."address_id", "address"."id"
+      ORDER BY "totalTransactions" DESC
+    `;
 
-  @Query(() => [DailyTransactionRanking]) // Decorate with appropriate return type
-  async userDailyRanking(
-    @Arg('date') date: string
-  ): Promise<DailyTransactionRanking[]> {
-    const manager = await this.tx();
-    const results: DailyTransactionRanking[] = [];
-
-    // Beginning of the day
-    const startOfDay = new Date(date);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const startOfDayMilliseconds = startOfDay.getTime();
-
-    // End of the day
-    const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999);
-    const endOfDayMilliseconds = endOfDay.getTime();
-
-    // Retrieve transactions for the specified date
-    const transactions: Transaction[] = await manager
-      .getRepository(Transaction)
-      .find({
-        where: {
-          timestamp: LessThanOrEqual(
-            // `${startOfDayMilliseconds}`,
-            `${endOfDayMilliseconds}`
-          ),
-        },
-        relations: ['sender.address'],
-      });
-
-    // Extract unique sender addresses
-    const uniqueAddresses = [
-      ...new Set(
-        transactions.map((transaction) => transaction.sender.address.id)
-      ),
-    ];
-
-    // Calculate totals for each sender address
-    for (const address of uniqueAddresses) {
-      const userTransactions = transactions.filter(
-        (transaction) => transaction.sender.address.id === address
-      );
-
-      // Extract unique chain IDs from transaction IDs
-      const uniqueChainIds = new Set(
-        userTransactions.map((transaction) => {
-          // Extract the chain ID from the transaction ID
-          const chainId = transaction.id.split('-')[0];
-          return chainId;
-        })
-      );
-
-      // Calculate total gas consumed and total contract calls
-      let totalGasConsumed = 0n;
-      let totalContractCalls = 0;
-      for (const transaction of userTransactions) {
-        totalGasConsumed += transaction.gasUsed;
-        if (transaction.type === TransactionType.CONTRACT_CALL) {
-          totalContractCalls++;
-        }
-      }
-
-      // Build the result object for the address
-      const userTotals: DailyTransactionRanking = {
-        address,
-        date: `${new Date(startOfDayMilliseconds).toISOString()}`,
-        numberOfAppchains: `${uniqueChainIds.size}`,
-        totalTransactions: userTransactions.length.toString(),
-        totalContractCalls: totalContractCalls.toString(),
-        totalGasConsumed: totalGasConsumed.toString(),
-      };
-
-      results.push(userTotals);
+    if (offset) {
+      query += `
+          OFFSET ${offset}
+          `;
     }
 
-    // Sort the results by totalTransactions in descending order
-    results.sort(
-      (a, b) => parseInt(b.totalTransactions) - parseInt(a.totalTransactions)
-    );
-
+    if (limit) {
+      query += `
+      LIMIT ${limit}
+      `;
+    }
+    
+    const results: UserStats[] = await manager.getRepository(Transaction).query(query);
     return results;
   }
 }
