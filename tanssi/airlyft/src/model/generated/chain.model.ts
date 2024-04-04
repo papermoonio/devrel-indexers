@@ -1,7 +1,7 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_} from "typeorm"
 import * as marshal from "./marshal"
 import {Transaction} from "./transaction.model"
-import {AddressChainConnection} from "./addressChainConnection.model"
+import {Address} from "./address.model"
 
 @Entity_()
 export class Chain {
@@ -30,6 +30,6 @@ export class Chain {
     @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
     uniqueAddressesCount!: bigint
 
-    @OneToMany_(() => AddressChainConnection, e => e.chain)
-    addresses!: AddressChainConnection[]
+    @OneToMany_(() => Address, e => e.chain)
+    addresses!: Address[]
 }

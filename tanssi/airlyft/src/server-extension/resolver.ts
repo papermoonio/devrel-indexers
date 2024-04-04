@@ -5,7 +5,7 @@ import { Transaction } from '../model';
 // To use logging, uncomment these two lines:
 // import { createLogger } from '@subsquid/logger';
 // const LOG = createLogger('sqd:graphql-server:my-resolver');
-  
+
 @ObjectType()
 class UserStats {
   @Field(() => String)
@@ -46,18 +46,17 @@ export class UserLeaderboardResolver {
 
     let query = `
       SELECT 
-        "address_chain_connection"."address_id" AS address,
+        "address"."address" AS address,
         SUM(CASE WHEN "transaction"."type" = 'CONTRACT_CALL' THEN 1 ELSE 0 END) AS "totalContractCalls",
         COUNT("transaction"."id") AS "totalTransactions",
         SUM("transaction"."gas_used") AS "totalGasConsumed",
         ARRAY_AGG(DISTINCT "transaction"."chain_id") AS "interactedAppchains"
       FROM "transaction"
-      LEFT JOIN "address_chain_connection" ON "address_chain_connection"."id" = "transaction"."sender_id"
-      LEFT JOIN "address" ON "address"."id" = "address_chain_connection"."address_id"
-      WHERE CAST("transaction"."timestamp" AS BIGINT) <= ${dataToDate.getTime()} AND "address"."id" IN (${
+      LEFT JOIN "address" ON "address"."id" = "transaction"."sender_id"
+      WHERE CAST("transaction"."timestamp" AS BIGINT) <= ${dataToDate.getTime()} AND "address"."address" IN (${
       "'" + addresses.join("','") + "'"
     })
-      GROUP BY "address_chain_connection"."address_id", "address"."id"
+      GROUP BY "address"."address"
       ORDER BY "totalTransactions" DESC
     `;
 
@@ -72,8 +71,10 @@ export class UserLeaderboardResolver {
       LIMIT ${limit}
       `;
     }
-    
-    const results: UserStats[] = await manager.getRepository(Transaction).query(query);
+
+    const results: UserStats[] = await manager
+      .getRepository(Transaction)
+      .query(query);
     return results;
   }
 }

@@ -7,10 +7,10 @@ deploy:
   addons:
     postgres:
   processor:
-    - name: 3035-processor
-      cmd: ['sqd', 'process:3035']
-    - name: 3085-processor
-      cmd: ['sqd', 'process:3085']
+    - name: 3092-processor
+      cmd: ['sqd', 'process:3092']
+    - name: 3093-processor
+      cmd: ['sqd', 'process:3093']
     - name: 3094-processor
       cmd: ['sqd', 'process:3094']
   api:

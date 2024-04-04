@@ -7,13 +7,13 @@ type Chain @entity {
   totalContractsCreated: BigInt! # The total number of contracts created on this chain
   totalGasUsed: BigInt! # The total gas used by this chain
   uniqueAddressesCount: BigInt! # The total number of unique addresses on this chain
-  addresses: [AddressChainConnection]! @derivedFrom(field: "chain") # List of addresses on this chain
+  addresses: [Address]! @derivedFrom(field: "chain") # List of addresses on this chain
 }
 
 # Join table for chains and addresses as an address can exist on many chains, and a chain has many addresses
-type AddressChainConnection @entity {
+type Address @entity {
   id: ID! # The chain ID + the address
-  address: Address! # The address
+  address: String! # The address
   chain: Chain! # The chain the address exists on
   isContract: Boolean! # Whether the address is a contract address or an EOA
   transactionsSent: [Transaction]! @derivedFrom(field: "sender") # List of transactions sent
@@ -32,8 +32,8 @@ type Transaction @entity {
   timestamp: String! # The transaction's timestamp
   isEvm: Boolean! # Whether it is an EVM or Substrate transaction
   hash: String! # The Substrate extrinsic or EVM transaction hash
-  sender: AddressChainConnection! # Transaction sender
-  receiver: AddressChainConnection # Transaction receiver
+  sender: Address! # Transaction sender
+  receiver: Address # Transaction receiver
   gasUsed: BigInt! # Gas consumed. For EVM transactions only
   type: TransactionType # The type of EVM transaction. For EVM transactions only
 }
@@ -43,10 +43,4 @@ enum TransactionType {
   BALANCE_TRANSFER
   CONTRACT_CALL
   CONTRACT_CREATION
-}
-
-# Statistics for each address
-type Address @entity {
-  id: ID! # The address
-  chains: [AddressChainConnection]! @derivedFrom(field: "address") # List of chains this address interacts with
 }

@@ -13,7 +13,7 @@ import { events } from '../types';
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
     chain: {
-      url: assertNotNull('https://fraa-dancebox-3085-rpc.a.dancebox.tanssi.network'),
+      url: assertNotNull('https://fraa-dancebox-3092-rpc.a.dancebox.tanssi.network'),
       rateLimit: 10000,
     },
   })

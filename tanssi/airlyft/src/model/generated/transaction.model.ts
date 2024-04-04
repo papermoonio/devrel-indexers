@@ -1,7 +1,7 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
 import * as marshal from "./marshal"
 import {Chain} from "./chain.model"
-import {AddressChainConnection} from "./addressChainConnection.model"
+import {Address} from "./address.model"
 import {TransactionType} from "./_transactionType"
 
 @Entity_()
@@ -30,12 +30,12 @@ export class Transaction {
     hash!: string
 
     @Index_()
-    @ManyToOne_(() => AddressChainConnection, {nullable: true})
-    sender!: AddressChainConnection
+    @ManyToOne_(() => Address, {nullable: true})
+    sender!: Address
 
     @Index_()
-    @ManyToOne_(() => AddressChainConnection, {nullable: true})
-    receiver!: AddressChainConnection | undefined | null
+    @ManyToOne_(() => Address, {nullable: true})
+    receiver!: Address | undefined | null
 
     @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
     gasUsed!: bigint

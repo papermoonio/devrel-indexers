@@ -3,7 +3,6 @@ import { In } from 'typeorm';
 import { processor, Call, Event, ProcessorContext } from './processor';
 import {
   Address,
-  AddressChainConnection,
   Chain,
   Transaction,
   TransactionType,
@@ -54,7 +53,7 @@ interface TransactionAddresses {
 processor.run(
   new TypeormDatabase({
     stateSchema: `${chainId}-processor`,
-    isolationLevel: 'REPEATABLE READ',
+    isolationLevel: 'READ COMMITTED',
   }),
   async (ctx) => {
     const transactionInfo = getTransactionInfo(ctx);
@@ -62,19 +61,13 @@ processor.run(
     // Get the chain item from the database
     let chain = await getChain(ctx);
 
-    // Get the address connections from the database
-    let addressChainConnections = await ctx.store
-      .findBy(AddressChainConnection, {
-        address: In([...transactionInfo.addresses]),
-      })
-      .then(
-        (addressChainConnections) =>
-          new Map(addressChainConnections.map((c) => [c.id.split('-')[1], c]))
-      );
-
+    // Get the addresses from the database
+    // TODO: change addressChainConnections to addresses
     let addresses = await ctx.store
-      .findBy(Address, { id: In([...transactionInfo.addresses]) })
-      .then((addresses) => new Map(addresses.map((a) => [a.id, a])));
+      .findBy(Address, {
+        id: In([...transactionInfo.addresses]),
+      })
+      .then((addresses) => new Map(addresses.map((c) => [c.id, c])));
 
     for (let address of transactionInfo.addresses) {
       if (!addresses.has(address)) {
@@ -82,16 +75,7 @@ processor.run(
         // and set all the stats to 0
         const newAddress = new Address({
           id: address,
-        });
-        addresses.set(address, newAddress);
-
-        // Add new addresses to the total count for the chain
-        chain.uniqueAddressesCount += BigInt(1);
-
-        // Create connection between the chain and the new address
-        const connection = new AddressChainConnection({
-          id: `${chainId}-${address}`,
-          address: newAddress,
+          address: address.split('-')[1], // The address is in chain-address format, so just grab the address here
           chain,
           isContract: false,
           totalTransactions: BigInt(0),
@@ -99,7 +83,10 @@ processor.run(
           totalContractsCreated: BigInt(0),
           totalGasUsed: BigInt(0),
         });
-        addressChainConnections.set(address, connection);
+        addresses.set(address, newAddress);
+
+        // Add new addresses to the total count for the chain
+        chain.uniqueAddressesCount += BigInt(1);
       }
     }
 
@@ -108,9 +95,7 @@ processor.run(
       const [transactionObject, sender, receiver] = transaction;
 
       /* Process the sender stats */
-      const senderConnection = addressChainConnections.get(
-        sender
-      ) as AddressChainConnection;
+      const senderAddress = addresses.get(sender) as Address;
 
       // Update the stats
       const transactions = BigInt(1);
@@ -124,30 +109,24 @@ processor.run(
           : BigInt(0);
       const totalGasUsed = transactionObject.gasUsed;
 
-      senderConnection.totalTransactions += transactions;
-      senderConnection.totalContractCalls += contractCalls;
-      senderConnection.totalContractsCreated += contractsCreated;
-      senderConnection.totalGasUsed += totalGasUsed;
+      senderAddress.totalTransactions += transactions;
+      senderAddress.totalContractCalls += contractCalls;
+      senderAddress.totalContractsCreated += contractsCreated;
+      senderAddress.totalGasUsed += totalGasUsed;
 
       // Update the transaction to include the sender now that we have the Address created
-      transactionObject.sender = senderConnection;
+      transactionObject.sender = senderAddress;
 
       /* Process the receiver stats */
       if (receiver) {
-        const receiverConnection = addressChainConnections.get(
-          receiver
-        ) as AddressChainConnection;
+        const receiverAddress = addresses.get(receiver) as Address;
 
         // Update the address to be a contract address if the type is CONTRACT_CALL
-        receiverConnection.isContract =
+        receiverAddress.isContract =
           transactionObject.type === TransactionType.CONTRACT_CREATION;
 
-        // Update the stats. Only need to worry about total transactions for receivers
-        // receiverAddress.totalTransactions += transactions;
-        receiverConnection.totalTransactions += transactions;
-
         // Update the transaction to include the receiver now that we have the Address created
-        transactionObject.receiver = receiverConnection;
+        transactionObject.receiver = receiverAddress;
       }
 
       /* Process the chain stats */
@@ -162,7 +141,6 @@ processor.run(
 
     await ctx.store.save(chain);
     await ctx.store.save([...addresses.values()]);
-    await ctx.store.save([...addressChainConnections.values()]);
     await ctx.store.insert(transactionInfo.transactions.map((el) => el[0]));
   }
 );
@@ -331,8 +309,8 @@ function processEvmTransactions(
 
         // The addresses will be created separately. So we just need to save and
         // return the addresses involved with the transaction for now
-        transactionAddresses.sender = from;
-        transactionAddresses.receiver = to;
+        transactionAddresses.sender = `${chainId}-${from}`;
+        transactionAddresses.receiver = `${chainId}-${to}`;
       }
 
       // Extract weight info from 'System.ExtrinsicSuccess' events. Note: If an EVM
@@ -348,7 +326,10 @@ function processEvmTransactions(
 
       if (event.name === events.system.newAccount.name) {
         const { account } = events.system.newAccount.v100.decode(event);
-        addressesFromInternalTxs.set(account, account);
+        addressesFromInternalTxs.set(
+          `${chainId}-${account}`,
+          `${chainId}-${account}`
+        );
       }
     }
   }
@@ -401,7 +382,7 @@ function processSubstrateTransactions(
   });
 
   const transactionAddresses: TransactionAddresses = {
-    sender: call.origin.value.value,
+    sender: `${chainId}-${call.origin.value.value}`,
     receiver: '',
   };
 
@@ -426,13 +407,13 @@ function processSubstrateTransactions(
   // Get the receiver for balance transfers
   if (call.name === calls.balances.transferAll.name) {
     const { dest } = calls.balances.transferAll.v100.decode(call);
-    transactionAddresses.receiver = dest;
+    transactionAddresses.receiver = `${chainId}-${dest}`;
   } else if (call.name === calls.balances.transferAllowDeath.name) {
     const { dest } = calls.balances.transferAllowDeath.v100.decode(call);
-    transactionAddresses.receiver = dest;
+    transactionAddresses.receiver = `${chainId}-${dest}`;
   } else if (call.name === calls.balances.transferKeepAlive.name) {
     const { dest } = calls.balances.transferKeepAlive.v100.decode(call);
-    transactionAddresses.receiver = dest;
+    transactionAddresses.receiver = `${chainId}-${dest}`;
   }
 
   // Process batch transactions to see if we need to add any new addresses
@@ -464,7 +445,10 @@ function processSubstrateTransactions(
             subcall.value.__kind === 'transfer_allow_death' ||
             subcall.value.__kind === 'transfer_keep_alive'
           )
-            addressesFromSubcalls.set(subcall.value.dest, subcall.value.dest);
+            addressesFromSubcalls.set(
+              `${chainId}-${subcall.value.dest}`,
+              `${chainId}-${subcall.value.dest}`
+            );
         }
       }
     }
@@ -478,7 +462,10 @@ function processSubstrateTransactions(
           subcall.value.__kind === 'transfer_allow_death' ||
           subcall.value.__kind === 'transfer_keep_alive'
         )
-          addressesFromSubcalls.set(subcall.value.dest, subcall.value.dest);
+          addressesFromSubcalls.set(
+            `${chainId}-${subcall.value.dest}`,
+            `${chainId}-${subcall.value.dest}`
+          );
       }
     }
   }

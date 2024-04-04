@@ -44,15 +44,15 @@
       "description": "Generate data access classes for an substrate metadata",
       "cmd": ["squid-substrate-typegen", "./typegen.json"]
     },
-    "process:3085": {
+    "process:3092": {
       "description": "Load .env and start the squid processor",
       "deps": ["build", "migration:apply"],
-      "cmd": ["node", "--require=dotenv/config", "lib/3085/main.js"]
+      "cmd": ["node", "--require=dotenv/config", "lib/3092/main.js"]
     },
-    "process:3035": {
+    "process:3093": {
       "description": "Load .env and start the squid processor",
       "deps": ["build", "migration:apply"],
-      "cmd": ["node", "--require=dotenv/config", "lib/3035/main.js"]
+      "cmd": ["node", "--require=dotenv/config", "lib/3093/main.js"]
     },
     "process:3094": {
       "description": "Load .env and start the squid processor",

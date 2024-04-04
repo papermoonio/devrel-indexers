@@ -1,5 +1,7 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_} from "typeorm"
-import {AddressChainConnection} from "./addressChainConnection.model"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
+import * as marshal from "./marshal"
+import {Chain} from "./chain.model"
+import {Transaction} from "./transaction.model"
 
 @Entity_()
 export class Address {
@@ -10,6 +12,31 @@ export class Address {
     @PrimaryColumn_()
     id!: string
 
-    @OneToMany_(() => AddressChainConnection, e => e.address)
-    chains!: AddressChainConnection[]
+    @Column_("text", {nullable: false})
+    address!: string
+
+    @Index_()
+    @ManyToOne_(() => Chain, {nullable: true})
+    chain!: Chain
+
+    @Column_("bool", {nullable: false})
+    isContract!: boolean
+
+    @OneToMany_(() => Transaction, e => e.sender)
+    transactionsSent!: Transaction[]
+
+    @OneToMany_(() => Transaction, e => e.receiver)
+    transactionsReceived!: Transaction[]
+
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+    totalTransactions!: bigint
+
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+    totalContractCalls!: bigint
+
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+    totalContractsCreated!: bigint
+
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+    totalGasUsed!: bigint
 }
