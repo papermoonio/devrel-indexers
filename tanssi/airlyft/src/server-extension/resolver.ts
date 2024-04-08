@@ -38,17 +38,17 @@ export class UserLeaderboardResolver {
 
     let query = `
       SELECT
-        address,
-        SUM(total_contract_calls) AS "totalContractCalls",
-        SUM("total_transactions") AS "totalTransactions",
-        SUM("total_gas_used") AS "totalGasConsumed",
-        ARRAY_AGG(DISTINCT chain_id) AS "interactedChains"
+        address.address,
+        SUM(address.total_contract_calls) AS "totalContractCalls",
+        SUM(address.total_transactions) AS "totalTransactions",
+        SUM(address.total_gas_used) AS "totalGasConsumed",
+        ARRAY_AGG(DISTINCT address.chain_id) AS "interactedAppchains"
       FROM
         address
       WHERE
-        address IN (${"'" + addresses.join("','") + "'"}) 
+        address.address IN (${"'" + addresses.join("','") + "'"}) 
       GROUP BY
-        address
+        address.address
         ORDER BY "totalTransactions" DESC
     `;
 
