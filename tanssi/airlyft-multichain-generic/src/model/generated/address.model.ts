@@ -1,4 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, ManyToOne as ManyToOne_, OneToMany as OneToMany_} from "typeorm"
 import * as marshal from "./marshal"
 import {Chain} from "./chain.model"
 import {Transaction} from "./transaction.model"
@@ -12,6 +12,7 @@ export class Address {
     @PrimaryColumn_()
     id!: string
 
+    @Index_()
     @Column_("text", {nullable: false})
     address!: string
 
