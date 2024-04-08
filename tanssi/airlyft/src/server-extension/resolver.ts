@@ -77,4 +77,98 @@ export class UserLeaderboardResolver {
       .query(query);
     return results;
   }
+
+  @Query(() => [UserStats]) // Decorate with appropriate return type
+  async userStats2(
+    @Arg('addresses', () => [String]) addresses: string[],
+    @Arg('limit', { nullable: true }) limit: number, // If no limit, get all results
+    @Arg('offset', { nullable: true }) offset: number // If no offset, get results starting from index 0
+  ): Promise<UserStats[]> {
+    const manager = await this.tx();
+
+    let query = `
+      SELECT
+        address,
+        SUM(totalContractCalls) AS "totalContractCalls",
+        SUM(totalTransactions) AS "totalTransactions",
+        SUM(totalGasConsumed) AS "totalGasConsumed",
+        ARRAY_AGG(DISTINCT chain_id) AS "interactedChains"
+      FROM
+        address
+      WHERE
+        address IN (${"'" + addresses.join("','") + "'"}) 
+      GROUP BY
+        address
+        ORDER BY "totalTransactions" DESC
+    `;
+
+    if (offset) {
+      query += `
+          OFFSET ${offset}
+          `;
+    }
+
+    if (limit) {
+      query += `
+      LIMIT ${limit}
+      `;
+    }
+
+    const results: UserStats[] = await manager
+      .getRepository(Transaction)
+      .query(query);
+    return results;
+  }
+
+  @Query(() => [UserStats]) // Decorate with appropriate return type
+  async userStats3(
+    @Arg('addresses', () => [String]) addresses: string[],
+    @Arg('date', { nullable: true }) date: string, // If no date, get the current totals
+    @Arg('limit', { nullable: true }) limit: number, // If no limit, get all results
+    @Arg('offset', { nullable: true }) offset: number // If no offset, get results starting from index 0
+  ): Promise<UserStats[]> {
+    const manager = await this.tx();
+
+    // Make sure we're getting all transactions up until EOD of the provided date
+    let dataToDate = new Date();
+    if (date) {
+      dataToDate = new Date(date);
+      dataToDate.setUTCHours(23, 59, 59, 999);
+    }
+
+    let query = `
+      SELECT
+        a.address,
+        COUNT(DISTINCT t.id) AS "totalTransactions",
+        SUM(t.gasUsed) AS "totalGasConsumed",
+        SUM(CASE WHEN t.type = 'CONTRACT_CALL' THEN 1 ELSE 0 END) AS "totalContractCalls",
+        ARRAY_AGG(DISTINCT t.chainId) AS "interactedChains"
+      FROM
+        address a
+      LEFT JOIN
+        transaction t ON t.senderId = a.id
+      WHERE CAST(t.timestamp AS BIGINT) <= ${dataToDate.getTime()} AND a.address IN (${
+          "'" + addresses.join("','") + "'"})
+      GROUP BY
+        a.address
+      ORDER BY "totalTransactions" DESC
+    `;
+
+    if (offset) {
+      query += `
+          OFFSET ${offset}
+          `;
+    }
+
+    if (limit) {
+      query += `
+      LIMIT ${limit}
+      `;
+    }
+
+    const results: UserStats[] = await manager
+      .getRepository(Transaction)
+      .query(query);
+    return results;
+  }
 }
