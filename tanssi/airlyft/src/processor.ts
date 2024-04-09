@@ -8,7 +8,7 @@ import {
   Call as _Call,
   Extrinsic as _Extrinsic,
 } from '@subsquid/substrate-processor';
-import { events } from './substrate-types';
+import { events as evmEvents} from './evm-types';
 
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
@@ -25,8 +25,8 @@ export const processor = new SubstrateBatchProcessor()
   .addEvent({
     name: [
       // Get extrinsic failed and success events (since they're not included in call events)
-      events.system.extrinsicFailed.name,
-      events.system.extrinsicSuccess.name,
+      evmEvents.system.extrinsicFailed.name,
+      evmEvents.system.extrinsicSuccess.name,
     ],
   })
   .setFields({
