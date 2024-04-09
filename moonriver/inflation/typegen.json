@@ -1,14 +1,22 @@
 {
   "outDir": "src/types",
-  "specVersions": "https://moonriver.archive.subsquid.io/graphql",
-  "typesBundle": "moonbeam",
-  "events": [
-    "ParachainStaking.Rewarded",
-    "ParachainStaking.ReservedForParachainBond",
-    "Treasury.Deposit"
-  ],
-  "calls": [ 
-  ],
-  "storage": [
-  ]
+  "specVersions": "https://v2.archive.subsquid.io/metadata/moonriver",
+  "pallets": {
+    "ParachainStaking": {
+      "events": [
+        "Rewarded",
+        "ReservedForParachainBond"
+      ]
+    },
+    "Treasury": {
+      "events": [
+        "Deposit"
+      ]
+    },
+    "MoonbeamOrbiters": {
+      "events": [
+        "OrbiterRewarded"
+      ]
+    }
+  }
 }
