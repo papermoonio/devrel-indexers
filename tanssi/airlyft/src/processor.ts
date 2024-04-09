@@ -8,7 +8,7 @@ import {
   Call as _Call,
   Extrinsic as _Extrinsic,
 } from '@subsquid/substrate-processor';
-import { events } from './types';
+import { events } from './substrate-types';
 
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
@@ -17,7 +17,7 @@ export const processor = new SubstrateBatchProcessor()
       rateLimit: 100000,
     },
   })
-  .setBlockRange({ from: 0 })
+  .setBlockRange({ from: 1711400 })
   .addCall({
     extrinsic: true, // Get all extrinsics so we can grab the hash and the success fields
     events: true, // Get all events so we can look at events like Ethereum.Executed, etc.

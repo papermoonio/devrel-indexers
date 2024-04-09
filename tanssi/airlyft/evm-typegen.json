@@ -1,6 +1,6 @@
 {
-    "outDir": "src/types",
-    "specVersions": "metadata.jsonl",
+    "outDir": "src/evm-types",
+    "specVersions": "evm-metadata.jsonl",
     "pallets": {
         "System": {
             "events": [
@@ -28,10 +28,6 @@
             ]
         },
         "Utility": {
-            "events": [
-                "BatchCompleted",
-                "BatchInterrupted"
-            ],
             "calls": [
                 "batch",
                 "batch_all"

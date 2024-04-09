@@ -2,7 +2,9 @@ import { Store, TypeormDatabase } from '@subsquid/typeorm-store';
 import { In } from 'typeorm';
 import { processor, Call, Event, ProcessorContext } from './processor';
 import { Address, Chain, Transaction, TransactionType } from './model';
-import { calls, events } from './types';
+import { calls as evmCalls, events as evmEvents } from './evm-types';
+import { calls, events } from './substrate-types';
+import * as ss58 from '@subsquid/ss58';
 
 /** --------------------------------------- DOCUMENTATION -----------------------------------------
 
@@ -32,8 +34,10 @@ To test it out with multiple chains locally, you will need to take the following
 
 Note:
 - Internal transactions on the EVM are not accounted for. However, any new addresses created from
-  internal transactions are accounted for
-- Subcalls of batch transactions are not counted. Only the root batch transaction itself
+  internal transactions are accounted for. Because of this, there may be accounts that exist with
+  0 transactions sent and 0 transactions received
+- Subcalls of batch transactions are not counted. Only the root batch transaction itself. Because
+  of this, there may be accounts that exist with 0 transactions sent and 0 transactions received
 - Failed transactions are not counted
 
 ----------------------------------------------------------------------------------------------- **/
@@ -53,7 +57,10 @@ interface TransactionAddresses {
 }
 
 processor.run(new TypeormDatabase(), async (ctx) => {
-  const transactionInfo = getTransactionInfo(ctx);
+  // Get the chain properties, which will tell us if it is an EVM or Substrate chain
+  const chainProperties = await ctx._chain.rpc.call('system_properties');
+
+  const transactionInfo = getTransactionInfo(ctx, chainProperties.isEthereum);
 
   // Get the chain item from the database
   let chain = await getChain(ctx);
@@ -162,7 +169,10 @@ async function getChain(ctx: ProcessorContext<Store>): Promise<Chain> {
   }
 }
 
-function getTransactionInfo(ctx: ProcessorContext<Store>): TransactionInfo {
+function getTransactionInfo(
+  ctx: ProcessorContext<Store>,
+  isEvmChain: boolean
+): TransactionInfo {
   let transactionsInfo: TransactionInfo = {
     transactions: [],
     addresses: new Set<string>(),
@@ -174,7 +184,7 @@ function getTransactionInfo(ctx: ProcessorContext<Store>): TransactionInfo {
     // System extrinsics will be at index 0-3, so we can skip ahead to the
     // extrinsic starting at index 4
     for (let i = 4; i < block.calls.length; i++) {
-      if (block.calls[i].name === calls.ethereum.transact.name) {
+      if (block.calls[i].name === evmCalls.ethereum.transact.name) {
         // Process EVM transactions
 
         // Don't process subcalls
@@ -225,7 +235,8 @@ function getTransactionInfo(ctx: ProcessorContext<Store>): TransactionInfo {
           block.header.height,
           block.header.timestamp,
           block.events,
-          block.calls[i]
+          block.calls[i],
+          isEvmChain
         );
 
         if (transactionInfo) {
@@ -264,7 +275,7 @@ function processEvmTransactions(
   | {
       transaction: Transaction;
       transactionAddresses: TransactionAddresses;
-      addressesFromInternalTxs: Map<string, string>;
+      addressesFromInternalTxs: Set<string>;
     }
   | undefined {
   const transactionAddresses: TransactionAddresses = {
@@ -272,8 +283,7 @@ function processEvmTransactions(
     receiver: '',
   };
 
-  // Use a map so we don't have to worry about duplicates
-  const addressesFromInternalTxs = new Map();
+  const addressesFromInternalTxs = new Set<string>();
 
   const transaction = new Transaction({
     id: `${chainId}-${call.id}`,
@@ -292,9 +302,9 @@ function processEvmTransactions(
   for (const event of blockEvents) {
     if (event.extrinsicIndex == extrinsicIndex) {
       // Extract sender and receiver data from 'Ethereum.Executed' events
-      if (event.name === events.ethereum.executed.name) {
+      if (event.name === evmEvents.ethereum.executed.name) {
         const { from, to, transactionHash, exitReason } =
-          events.ethereum.executed.v100.decode(event);
+          evmEvents.ethereum.executed.v100.decode(event);
 
         // If the transaction failed, no need to process it
         if (exitReason.__kind !== 'Succeed') {
@@ -310,21 +320,18 @@ function processEvmTransactions(
 
       // Extract weight info from 'System.ExtrinsicSuccess' events. Note: If an EVM
       // transaction fails, it's reported in the 'Ethereum.Executed' event
-      if (event.name === events.system.extrinsicSuccess.name) {
+      if (event.name === evmEvents.system.extrinsicSuccess.name) {
         const {
           dispatchInfo: {
             weight: { refTime },
           },
-        } = events.system.extrinsicSuccess.v100.decode(event);
+        } = evmEvents.system.extrinsicSuccess.v100.decode(event);
         transaction.gasUsed = refTime / weightPerGas;
       }
 
-      if (event.name === events.system.newAccount.name) {
-        const { account } = events.system.newAccount.v100.decode(event);
-        addressesFromInternalTxs.set(
-          `${chainId}-${account}`,
-          `${chainId}-${account}`
-        );
+      if (event.name === evmEvents.system.newAccount.name) {
+        const { account } = evmEvents.system.newAccount.v100.decode(event);
+        addressesFromInternalTxs.add(`${chainId}-${account}`);
       }
     }
   }
@@ -333,7 +340,7 @@ function processEvmTransactions(
     transaction: {
       value: { input, value, action },
     },
-  } = calls.ethereum.transact.v100.decode(call);
+  } = evmCalls.ethereum.transact.v100.decode(call);
 
   if (action.__kind == 'Call') {
     // In this case, it can be either a contract interaction or a balance transfer
@@ -355,12 +362,13 @@ function processSubstrateTransactions(
   blockNo: number,
   timestamp: number | undefined,
   blockEvents: Event[],
-  call: Call
+  call: Call,
+  isEvmChain: boolean
 ):
   | {
       transaction: Transaction;
       transactionAddresses: TransactionAddresses;
-      addressesFromSubcalls: Map<string, string>;
+      addressesFromSubcalls: Set<string>;
     }
   | undefined {
   const transaction = new Transaction({
@@ -377,90 +385,131 @@ function processSubstrateTransactions(
   });
 
   const transactionAddresses: TransactionAddresses = {
-    sender: `${chainId}-${call.origin.value.value}`,
+    sender: '',
     receiver: '',
   };
-
+  const addressesFromSubcalls = new Set<string>();
   const extrinsicIndex = call.extrinsicIndex;
-  // Get the status of the extrinsic
-  if (call.extrinsic) {
-    if (!call.extrinsic.success) {
-      // If the transaction failed, no need to process it
-      return;
+
+  if (isEvmChain) {
+    // Get the status of the extrinsic
+    if (call.extrinsic) {
+      if (!call.extrinsic.success) {
+        // If the transaction failed, no need to process it
+        return;
+      }
+    } else {
+      for (const event of blockEvents) {
+        if (event.extrinsicIndex == extrinsicIndex) {
+          if (event.name === evmEvents.system.extrinsicFailed.name) {
+            // If the transaction failed, no need to process it
+            return;
+          }
+        }
+      }
+    }
+
+    transactionAddresses.sender = `${chainId}-${call.origin.value.value}`;
+    // For balance transfers, lets rely on the `BalanceTransfer` event to get the receiver
+    if (
+      call.name === evmCalls.balances.transferAll.name ||
+      call.name === evmCalls.balances.transferAllowDeath.name ||
+      call.name === evmCalls.balances.transferKeepAlive.name
+    ) {
+      for (const event of call.events) {
+        if (
+          event.name === evmEvents.balances.transfer.name &&
+          event.extrinsicIndex == extrinsicIndex
+        ) {
+          if (evmEvents.balances.transfer.v100.is(event)) {
+            const { to } = evmEvents.balances.transfer.v100.decode(event);
+            transactionAddresses.receiver = `${chainId}-${to}`;
+          }
+        }
+      }
+    }
+
+    // Process batch transactions to see if we need to add any new addresses as receivers
+    if (
+      call.name === evmCalls.utility.batch.name ||
+      call.name === evmCalls.utility.batchAll.name
+    ) {
+      // Iterate over the events to check for balance transfers as part of the batch
+      for (const event of call.events) {
+        if (
+          event.name === evmEvents.balances.transfer.name &&
+          event.extrinsicIndex == extrinsicIndex
+        ) {
+          if (evmEvents.balances.transfer.v100.is(event)) {
+            const { to } = evmEvents.balances.transfer.v100.decode(event);
+            // These addresses would not be the receiver in this case
+            addressesFromSubcalls.add(`${chainId}-${to}`);
+          }
+        }
+      }
     }
   } else {
-    for (const event of blockEvents) {
-      if (event.extrinsicIndex == extrinsicIndex) {
-        if (event.name === events.system.extrinsicFailed.name) {
-          // If the transaction failed, no need to process it
-          return;
+    // Get the status of the extrinsic
+    if (call.extrinsic) {
+      if (!call.extrinsic.success) {
+        // If the transaction failed, no need to process it
+        return;
+      }
+    } else {
+      for (const event of blockEvents) {
+        if (event.extrinsicIndex == extrinsicIndex) {
+          if (event.name === events.system.extrinsicFailed.name) {
+            // If the transaction failed, no need to process it
+            return;
+          }
         }
       }
     }
-  }
 
-  // Get the receiver for balance transfers
-  if (call.name === calls.balances.transferAll.name) {
-    const { dest } = calls.balances.transferAll.v100.decode(call);
-    transactionAddresses.receiver = `${chainId}-${dest}`;
-  } else if (call.name === calls.balances.transferAllowDeath.name) {
-    const { dest } = calls.balances.transferAllowDeath.v100.decode(call);
-    transactionAddresses.receiver = `${chainId}-${dest}`;
-  } else if (call.name === calls.balances.transferKeepAlive.name) {
-    const { dest } = calls.balances.transferKeepAlive.v100.decode(call);
-    transactionAddresses.receiver = `${chainId}-${dest}`;
-  }
+    transactionAddresses.sender = `${chainId}-${ss58
+      .codec('substrate')
+      .encode(call.origin.value.value)}`;
 
-  // Process batch transactions to see if we need to add any new addresses
-  // as receivers
-  // Use a map so we don't have to worry about duplicates
-  const addressesFromSubcalls = new Map();
-  if (call.name === calls.utility.batch.name) {
-    // For the batch function, some subcalls can fail while others pass.
-    // Need to ensure that we aren't accounting for any failed subcalls
-    // Iterate over the block events to see if there is a Batch.Interrupted event
-    let interruptedIndex = null;
-    for (const event of blockEvents) {
-      if (event.name === events.utility.batchInterrupted.name) {
-        interruptedIndex = event.args.index;
-      }
-    }
-
-    const subcalls = call.args.calls;
-    for (let i = 0; i < subcalls.length; i++) {
-      const subcall = subcalls[i];
-      // If the subcall failed, we don't need to get any data from it
-      if (interruptedIndex && i >= interruptedIndex) {
-        continue;
-      } else {
-        // If the subcall was successful, we need to see if there are any receiving addresses
-        if (subcall.__kind === 'Balances') {
-          if (
-            subcall.value.__kind === 'transfer_all' ||
-            subcall.value.__kind === 'transfer_allow_death' ||
-            subcall.value.__kind === 'transfer_keep_alive'
-          )
-            addressesFromSubcalls.set(
-              `${chainId}-${subcall.value.dest}`,
-              `${chainId}-${subcall.value.dest}`
-            );
-        }
-      }
-    }
-  } else if (call.name === calls.utility.batchAll.name) {
-    // For the batch all function, all subcalls will pass
-    const subcalls = call.args.calls;
-    for (const subcall of subcalls) {
-      if (subcall.__kind === 'Balances') {
+    // For balance transfers, lets rely on the `BalanceTransfer` event to get the receiver
+    if (
+      call.name === calls.balances.transferAll.name ||
+      call.name === calls.balances.transferAllowDeath.name ||
+      call.name === calls.balances.transferKeepAlive.name
+    ) {
+      for (const event of call.events) {
         if (
-          subcall.value.__kind === 'transfer_all' ||
-          subcall.value.__kind === 'transfer_allow_death' ||
-          subcall.value.__kind === 'transfer_keep_alive'
-        )
-          addressesFromSubcalls.set(
-            `${chainId}-${subcall.value.dest}`,
-            `${chainId}-${subcall.value.dest}`
-          );
+          event.name === events.balances.transfer.name &&
+          event.extrinsicIndex == extrinsicIndex
+        ) {
+          if (events.balances.transfer.v200.is(event)) {
+            const { to } = events.balances.transfer.v200.decode(event);
+            transactionAddresses.receiver = `${chainId}-${ss58
+              .codec('substrate')
+              .encode(to)}`;
+          }
+        }
+      }
+    }
+
+    // Process batch transactions to see if we need to add any new addresses as receivers
+    if (
+      call.name === calls.utility.batch.name ||
+      call.name === calls.utility.batchAll.name
+    ) {
+      // Iterate over the events to check for balance transfers as part of the batch
+      for (const event of call.events) {
+        if (
+          event.name === events.balances.transfer.name &&
+          event.extrinsicIndex == extrinsicIndex
+        ) {
+          if (events.balances.transfer.v200.is(event)) {
+            const { to } = events.balances.transfer.v200.decode(event);
+            // These addresses would not be the receiver in this case
+            addressesFromSubcalls.add(
+              `${chainId}-${ss58.codec('substrate').encode(to)}`
+            );
+          }
+        }
       }
     }
   }

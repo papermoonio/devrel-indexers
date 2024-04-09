@@ -1,0 +1,27 @@
+{
+    "outDir": "src/substrate-types",
+    "specVersions": "substrate-metadata.jsonl",
+    "pallets": {
+        "System": {
+            "events": [
+                "ExtrinsicFailed"
+            ]
+        },
+        "Balances": {
+            "events": [
+                "Transfer"
+            ],
+            "calls": [
+                "transfer_all",
+                "transfer_allow_death",
+                "transfer_keep_alive"
+            ]
+        },
+        "Utility": {
+            "calls": [
+                "batch",
+                "batch_all"
+            ]
+        }
+    }
+}
