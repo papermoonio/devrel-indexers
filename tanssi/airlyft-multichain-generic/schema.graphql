@@ -10,10 +10,10 @@ type Chain @entity {
   addresses: [Address]! @derivedFrom(field: "chain") # List of addresses on this chain
 }
 
-# Join table for chains and addresses as an address can exist on many chains, and a chain has many addresses
+# Table for addresses statistics
 type Address @entity {
   id: ID! # The chain ID + the address
-  address: String! # The address
+  address: String! @index # The address
   chain: Chain! # The chain the address exists on
   isContract: Boolean! # Whether the address is a contract address or an EOA
   transactionsSent: [Transaction]! @derivedFrom(field: "sender") # List of transactions sent
