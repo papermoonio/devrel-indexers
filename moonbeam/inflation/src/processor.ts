@@ -8,11 +8,11 @@ import {
   Call as _Call,
   Extrinsic as _Extrinsic,
 } from '@subsquid/substrate-processor';
-
+import { lookupArchive } from '@subsquid/archive-registry'
 import { events } from './types';
 
 export const processor = new SubstrateBatchProcessor()
-  .setGateway('https://v2.archive.subsquid.io/metadata/moonbeam')
+  .setGateway(lookupArchive('moonbeam', {type: 'Substrate'}))
   .setRpcEndpoint({
     url: assertNotNull(process.env.RPC_ENDPOINT),
     rateLimit: 10000
