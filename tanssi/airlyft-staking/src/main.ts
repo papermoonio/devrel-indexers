@@ -3,6 +3,7 @@ import { In } from 'typeorm';
 import { processor, ProcessorContext } from './processor';
 import { Account, Delegation, Undelegation } from './model';
 import { events } from './types';
+import * as ss58 from '@subsquid/ss58'
 
 type Tuple<T, K> = [T, K];
 interface EventsInfo {
@@ -56,14 +57,14 @@ function getEventsInfo(ctx: ProcessorContext<Store>): EventsInfo {
           eventsInfo.delegations.push([
             new Delegation({
               id: event.id,
-              candidate: candidate,
+              candidate: ss58.codec('substrate').encode(candidate),
               blockNo: event.block.height,
               timestamp: `${event.block.timestamp}`
             }),
             // Add delegator to the set of unique accounts
-            delegator,
+            ss58.codec('substrate').encode(delegator),
           ]);
-          eventsInfo.accountIds.add(delegator);
+          eventsInfo.accountIds.add(ss58.codec('substrate').encode(delegator));
         }
       }
       if (event.name == events.pooledStaking.executedUndelegate.name) {
@@ -74,14 +75,14 @@ function getEventsInfo(ctx: ProcessorContext<Store>): EventsInfo {
           eventsInfo.undelegations.push([
             new Undelegation({
               id: event.id,
-              candidate: candidate,
+              candidate: ss58.codec('substrate').encode(candidate),
               blockNo: event.block.height,
               timestamp: `${event.block.timestamp}`
             }),
             // Add delegator to the set of unique accounts
-            delegator,
+            ss58.codec('substrate').encode(delegator),
           ]);
-          eventsInfo.accountIds.add(delegator);
+          eventsInfo.accountIds.add(ss58.codec('substrate').encode(delegator));
         }
       }
     }
