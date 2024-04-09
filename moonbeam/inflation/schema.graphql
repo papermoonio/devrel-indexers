@@ -1,31 +1,18 @@
 type StakingReward @entity {
-
   id: ID!  # block number - event index
-
   balance: BigInt!
-
-  timestamp: BigInt!
-
+  timestamp: BigInt
   account: String!
-
 }
 
 type ParachainBondTransfer @entity {
-
   id: ID! # block number - event index
-
   balance: BigInt!
-
-  timestamp: BigInt!
-  
+  timestamp: BigInt
 }
 
 type BurnedFees @entity {
-
   id: ID! # block number
-
   amount: BigInt!
-
-  timestamp: BigInt!
-  
+  timestamp: BigInt
 }

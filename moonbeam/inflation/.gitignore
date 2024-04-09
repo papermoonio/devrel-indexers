@@ -1,8 +1,11 @@
-node_modules/
-lib/
+/node_modules
+/lib
+/builds
 
-**Versions.json
-**Versions.jsonl
+/**Versions.json
+/**Versions.jsonl
 
 # IDE files
-.idea
+/.idea
+
+.env
