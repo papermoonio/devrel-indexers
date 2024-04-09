@@ -3,6 +3,22 @@ type ParachainIdRegistration @entity {
   id: ID!
   blockNo: Int! # The block number the registration occurred
   timestamp: String! # The timestamp the registration occurred
-  paraId: Int! # The parachain ID registered
+  paraId: Chain! @unique # The parachain ID registered
   sender: String! # The account that sent the registration extrinsic
+}
+
+# Registration on Relay Chain
+type RelayRegistration @entity {
+  id: ID!
+  blockNo: Int! # The block number the registration occurred
+  timestamp: String! # The timestamp the registration occurred
+  paraId: Chain! @unique # The parachain ID registered
+  sender: String! # The account that sent the registration extrinsic
+}
+
+# # To make it easier to see if a paraId has been registered on the relay and tanssi
+type Chain @entity {
+  id: ID! # The parachain ID
+  parachainRegistration: ParachainIdRegistration @derivedFrom(field: "paraId")
+  relayRegistration: RelayRegistration  @derivedFrom(field: "paraId")
 }

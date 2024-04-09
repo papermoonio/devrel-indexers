@@ -1,4 +1,5 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToOne as OneToOne_, Index as Index_, JoinColumn as JoinColumn_} from "typeorm"
+import {Chain} from "./chain.model"
 
 @Entity_()
 export class ParachainIdRegistration {
@@ -15,8 +16,10 @@ export class ParachainIdRegistration {
     @Column_("text", {nullable: false})
     timestamp!: string
 
-    @Column_("int4", {nullable: false})
-    paraId!: number
+    @Index_({unique: true})
+    @OneToOne_(() => Chain, {nullable: true})
+    @JoinColumn_()
+    paraId!: Chain
 
     @Column_("text", {nullable: false})
     sender!: string

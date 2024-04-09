@@ -1,0 +1,11 @@
+{
+    "outDir": "types",
+    "specVersions": "dancebox-metadata.jsonl",
+    "pallets": {
+        "Registrar": {
+            "events": [
+                "ParaIdRegistered"
+            ]
+        }
+    }
+}

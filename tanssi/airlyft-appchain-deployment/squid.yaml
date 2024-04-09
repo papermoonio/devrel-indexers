@@ -7,11 +7,10 @@ deploy:
   addons:
     postgres: 
   processor:
-    cmd:
-      - sqd
-      - process:prod
-    env:
-      RPC_ENDPOINT: ${{ secrets.RPC_ENDPOINT }}
+    - name: dancebox-processor
+      cmd: ['sqd', 'process:dancebox']
+    - name: relay-processor
+      cmd: ['sqd', 'process:relay']
   api:
     cmd:
       - sqd

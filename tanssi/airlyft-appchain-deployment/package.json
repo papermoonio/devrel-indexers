@@ -8,6 +8,8 @@
     "build": "rm -rf lib && tsc"
   },
   "dependencies": {
+    "@polkadot/types": "^10.12.6",
+    "@polkadot/types-create": "^10.12.6",
     "@subsquid/archive-registry": "^3.3.0",
     "@subsquid/evm-processor": "^1.17.0",
     "@subsquid/graphql-server": "^4.3.1",

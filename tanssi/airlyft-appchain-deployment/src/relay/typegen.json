@@ -1,0 +1,11 @@
+{
+    "outDir": "types",
+    "specVersions": "relay-metadata.jsonl",
+    "pallets": {
+        "Registrar": {
+            "events": [
+                "Registered"
+            ]
+        }
+    }
+}

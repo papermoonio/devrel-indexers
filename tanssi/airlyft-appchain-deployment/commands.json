@@ -79,14 +79,21 @@
         "squid-typeorm-codegen"
       ]
     },
-    "typegen": {
+    "typegen-dancebox": {
       "description": "Generate data access classes for an substrate metadata",
       "cmd": [
         "squid-substrate-typegen",
         "./typegen.json"
       ]
     },
-    "process": {
+    "typegen-relay": {
+      "description": "Generate data access classes for an substrate metadata",
+      "cmd": [
+        "squid-substrate-typegen",
+        "./typegen.json"
+      ]
+    },
+    "process:dancebox": {
       "description": "Load .env and start the squid processor",
       "deps": [
         "build",
@@ -95,7 +102,19 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/main.js"
+        "lib/dancebox/main.js"
+      ]
+    },
+    "process:relay": {
+      "description": "Load .env and start the squid processor",
+      "deps": [
+        "build",
+        "migration:apply"
+      ],
+      "cmd": [
+        "node",
+        "--require=dotenv/config",
+        "lib/relay/main.js"
       ]
     },
     "serve": {
