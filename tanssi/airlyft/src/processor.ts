@@ -17,7 +17,7 @@ export const processor = new SubstrateBatchProcessor()
       rateLimit: 100000,
     },
   })
-  .setBlockRange({ from: 1711400 })
+  .setBlockRange({ from: 0 })
   .addCall({
     extrinsic: true, // Get all extrinsics so we can grab the hash and the success fields
     events: true, // Get all events so we can look at events like Ethereum.Executed, etc.
