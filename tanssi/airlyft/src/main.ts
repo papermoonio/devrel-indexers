@@ -61,8 +61,8 @@ const chainStats = {
   totalContractCalls: 0n,
   totalContractsCreated: 0n,
   totalGasUsed: 0n,
-  uniqueAddressesCount: 0n
-}
+  uniqueAddressesCount: 0n,
+};
 let chainSaved = false;
 
 processor.run(new TypeormDatabase(), async (ctx) => {
@@ -74,7 +74,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
   // Get the chain item from the database
   const chain = new Chain({
     id: chainId,
-  })
+  });
 
   // Get the addresses from the database
   let addresses = await ctx.store
@@ -155,14 +155,13 @@ processor.run(new TypeormDatabase(), async (ctx) => {
 
   // Update the chain data with the new stats
   chain.totalTransactions = chainStats.totalTransactions;
-  chain.totalContractCalls = chainStats.totalContractCalls; 
+  chain.totalContractCalls = chainStats.totalContractCalls;
   chain.totalContractsCreated = chainStats.totalContractsCreated;
   chain.totalGasUsed = chainStats.totalGasUsed;
   chain.uniqueAddressesCount = chainStats.uniqueAddressesCount;
 
   if (!chainSaved) {
     // If the chain hasn't been saved yet, save it
-    console.log('chain updated')
     await ctx.store.save(chain);
     chainSaved = true;
   } else {
@@ -172,7 +171,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
       await ctx.store.save(chain);
     }
   }
-  
+
   if (addresses.size > 0) {
     await ctx.store.save([...addresses.values()]);
   }
