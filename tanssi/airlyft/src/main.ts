@@ -56,6 +56,15 @@ interface TransactionAddresses {
   receiver: string;
 }
 
+const chainStats = {
+  totalTransactions: 0n,
+  totalContractCalls: 0n,
+  totalContractsCreated: 0n,
+  totalGasUsed: 0n,
+  uniqueAddressesCount: 0n
+}
+let chainSaved = false;
+
 processor.run(new TypeormDatabase(), async (ctx) => {
   // Get the chain properties, which will tell us if it is an EVM or Substrate chain
   const chainProperties = await ctx._chain.rpc.call('system_properties');
@@ -63,7 +72,9 @@ processor.run(new TypeormDatabase(), async (ctx) => {
   const transactionInfo = getTransactionInfo(ctx, chainProperties.isEthereum);
 
   // Get the chain item from the database
-  let chain = await getChain(ctx);
+  const chain = new Chain({
+    id: chainId,
+  })
 
   // Get the addresses from the database
   let addresses = await ctx.store
@@ -89,7 +100,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
       addresses.set(address, newAddress);
 
       // Add new addresses to the total count for the chain
-      chain.uniqueAddressesCount += BigInt(1);
+      chainStats.uniqueAddressesCount += BigInt(1);
     }
   }
 
@@ -133,41 +144,43 @@ processor.run(new TypeormDatabase(), async (ctx) => {
     }
 
     /* Process the chain stats */
-    chain.totalTransactions += transactions;
-    chain.totalContractCalls += contractCalls;
-    chain.totalContractsCreated += contractsCreated;
-    chain.totalGasUsed += totalGasUsed;
+    chainStats.totalTransactions += transactions;
+    chainStats.totalContractCalls += contractCalls;
+    chainStats.totalContractsCreated += contractsCreated;
+    chainStats.totalGasUsed += totalGasUsed;
 
     // Update the transaction to include the chain now that we have the Chain
     transactionObject.chain = chain;
   }
 
-  await ctx.store.save(chain);
-  await ctx.store.save([...addresses.values()]);
-  await ctx.store.insert(transactionInfo.transactions.map((el) => el[0]));
-});
+  // Update the chain data with the new stats
+  chain.totalTransactions = chainStats.totalTransactions;
+  chain.totalContractCalls = chainStats.totalContractCalls; 
+  chain.totalContractsCreated = chainStats.totalContractsCreated;
+  chain.totalGasUsed = chainStats.totalGasUsed;
+  chain.uniqueAddressesCount = chainStats.uniqueAddressesCount;
 
-async function getChain(ctx: ProcessorContext<Store>): Promise<Chain> {
-  let chain = await ctx.store.findOneBy(Chain, { id: chainId });
-  if (!chain) {
-    const newChain = new Chain({
-      id: chainId,
-      transactions: [],
-      totalTransactions: BigInt(0),
-      totalContractCalls: BigInt(0),
-      totalContractsCreated: BigInt(0),
-      totalGasUsed: BigInt(0),
-      uniqueAddressesCount: BigInt(0),
-      addresses: [],
-    });
-
-    // Save the chain and return it
-    await ctx.store.insert(newChain);
-    return newChain;
+  if (!chainSaved) {
+    // If the chain hasn't been saved yet, save it
+    console.log('chain updated')
+    await ctx.store.save(chain);
+    chainSaved = true;
   } else {
-    return chain;
+    // If the chain has been saved, to avoid unnecessary saves, make sure that
+    // there are new addresses or transactions before saving it again
+    if (addresses.size > 0 || transactionInfo.transactions.length > 0) {
+      await ctx.store.save(chain);
+    }
   }
-}
+  
+  if (addresses.size > 0) {
+    await ctx.store.save([...addresses.values()]);
+  }
+
+  if (transactionInfo.transactions.length > 0) {
+    await ctx.store.insert(transactionInfo.transactions.map((el) => el[0]));
+  }
+});
 
 function getTransactionInfo(
   ctx: ProcessorContext<Store>,
