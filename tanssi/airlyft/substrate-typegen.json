@@ -4,7 +4,8 @@
     "pallets": {
         "System": {
             "events": [
-                "ExtrinsicFailed"
+                "ExtrinsicFailed",
+                "ExtrinsicSuccess"
             ]
         },
         "Balances": {

@@ -410,13 +410,22 @@ function processSubstrateTransactions(
         // If the transaction failed, no need to process it
         return;
       }
-    } else {
-      for (const event of blockEvents) {
-        if (event.extrinsicIndex == extrinsicIndex) {
-          if (event.name === evmEvents.system.extrinsicFailed.name) {
-            // If the transaction failed, no need to process it
-            return;
-          }
+    }
+
+    // Have to iterate over the block events instead of the call events to get
+    // the Extrinsic Success/Extrinsic Failed events to calculate gasUsed
+    for (const event of blockEvents) {
+      if (event.extrinsicIndex == extrinsicIndex) {
+        if (event.name === evmEvents.system.extrinsicSuccess.name) {
+          const {
+            dispatchInfo: {
+              weight: { refTime },
+            },
+          } = evmEvents.system.extrinsicSuccess.v100.decode(event);
+          transaction.gasUsed = refTime / weightPerGas;
+        } else if (event.name === events.system.extrinsicFailed.name) {
+          // If the transaction failed, no need to process it
+          return;
         }
       }
     }
@@ -461,23 +470,23 @@ function processSubstrateTransactions(
       }
     }
   } else {
-    // Get the status of the extrinsic
-    if (call.extrinsic) {
-      if (!call.extrinsic.success) {
-        // If the transaction failed, no need to process it
-        return;
-      }
-    } else {
-      for (const event of blockEvents) {
-        if (event.extrinsicIndex == extrinsicIndex) {
-          if (event.name === events.system.extrinsicFailed.name) {
-            // If the transaction failed, no need to process it
-            return;
-          }
+    // Have to iterate over the block events instead of the call events
+    // to get the Extrinsic Success/Extrinsic Failed events
+    for (const event of blockEvents) {
+      if (event.extrinsicIndex == extrinsicIndex) {
+        if (event.name === events.system.extrinsicSuccess.name) {
+          const {
+            dispatchInfo: {
+              weight: { refTime },
+            },
+          } = events.system.extrinsicSuccess.v200.decode(event);
+          transaction.gasUsed = refTime / weightPerGas;
+        } else if (event.name === events.system.extrinsicFailed.name) {
+          // If the transaction failed, no need to process it
+          return;
         }
       }
     }
-
     transactionAddresses.sender = `${chainId}-${ss58
       .codec('substrate')
       .encode(call.origin.value.value)}`;

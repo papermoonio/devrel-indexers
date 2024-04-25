@@ -2,6 +2,7 @@ import {sts, Block, Bytes, Option, Result, CallType, RuntimeCtx} from '../suppor
 import * as v100 from '../v100'
 import * as v200 from '../v200'
 import * as v400 from '../v400'
+import * as v500 from '../v500'
 
 export const batch =  {
     name: 'Utility.batch',
@@ -66,6 +67,15 @@ export const batch =  {
             calls: sts.array(() => v400.Call),
         })
     ),
+    /**
+     * See [`Pallet::batch`].
+     */
+    v500: new CallType(
+        'Utility.batch',
+        sts.struct({
+            calls: sts.array(() => v500.Call),
+        })
+    ),
 }
 
 export const batchAll =  {
@@ -119,6 +129,15 @@ export const batchAll =  {
         'Utility.batch_all',
         sts.struct({
             calls: sts.array(() => v400.Call),
+        })
+    ),
+    /**
+     * See [`Pallet::batch_all`].
+     */
+    v500: new CallType(
+        'Utility.batch_all',
+        sts.struct({
+            calls: sts.array(() => v500.Call),
         })
     ),
 }
