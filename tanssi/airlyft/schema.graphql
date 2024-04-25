@@ -34,7 +34,7 @@ type Transaction @entity {
   hash: String! # The Substrate extrinsic or EVM transaction hash
   sender: Address! # Transaction sender
   receiver: Address # Transaction receiver
-  gasUsed: BigInt! # Gas consumed. For EVM transactions only
+  gasUsed: BigInt! # Gas consumed
   type: TransactionType # The type of EVM transaction. For EVM transactions only
 }
 
