@@ -5,6 +5,7 @@ import { Address, Chain, Transaction, TransactionType } from './model';
 import { calls as evmCalls, events as evmEvents } from './evm-types';
 import { calls, events } from './substrate-types';
 import * as ss58 from '@subsquid/ss58';
+import { Web3 } from "web3";
 
 /** --------------------------------------- DOCUMENTATION -----------------------------------------
 
@@ -48,7 +49,7 @@ const chainId = process.env.CHAIN_ID || '';
 type Tuple<T, K, L> = [T, K, L];
 interface TransactionInfo {
   transactions: Tuple<Transaction, string, string>[]; // The transaction, the sender, the receiver
-  addresses: Set<string>;
+  addresses: Map<string, boolean>;
 }
 
 interface TransactionAddresses {
@@ -68,7 +69,6 @@ let chainSaved = false;
 processor.run(new TypeormDatabase(), async (ctx) => {
   // Get the chain properties, which will tell us if it is an EVM or Substrate chain
   const chainProperties = await ctx._chain.rpc.call('system_properties');
-
   const transactionInfo = getTransactionInfo(ctx, chainProperties.isEthereum);
 
   // Get the chain item from the database
@@ -79,25 +79,39 @@ processor.run(new TypeormDatabase(), async (ctx) => {
   // Get the addresses from the database
   let addresses = await ctx.store
     .findBy(Address, {
-      id: In([...transactionInfo.addresses]),
+      id: In([...transactionInfo.addresses.keys()]),
     })
     .then((addresses) => new Map(addresses.map((c) => [c.id, c])));
 
+  // Process addresses
   for (let address of transactionInfo.addresses) {
-    if (!addresses.has(address)) {
+    if (!addresses.has(address[0])) {
+      // The address is in chain-address format, so just grab the address here
+      let formattedAddress = address[0].split('-')[1]
+      
+      // Check if the address is created from an internal transaction
+      let isContract = false;
+      if (address[1]) {
+        const web3 = new Web3(process.env.RPC_ENDPOINT);
+        const code = await web3.eth.getCode(formattedAddress);
+        if (code !== '0x') {
+          isContract = true;
+        }
+      }
+
       // If the list of unique addresses doesnt include this address, create a new address
       // and set all the stats to 0
       const newAddress = new Address({
-        id: address,
-        address: address.split('-')[1], // The address is in chain-address format, so just grab the address here
+        id: address[0],
+        address: formattedAddress,
         chain,
-        isContract: false,
+        isContract,
         totalTransactions: BigInt(0),
         totalContractCalls: BigInt(0),
         totalContractsCreated: BigInt(0),
         totalGasUsed: BigInt(0),
       });
-      addresses.set(address, newAddress);
+      addresses.set(address[0], newAddress);
 
       // Add new addresses to the total count for the chain
       chainStats.uniqueAddressesCount += BigInt(1);
@@ -136,8 +150,11 @@ processor.run(new TypeormDatabase(), async (ctx) => {
       const receiverAddress = addresses.get(receiver) as Address;
 
       // Update the address to be a contract address if the type is CONTRACT_CALL
-      receiverAddress.isContract =
-        transactionObject.type === TransactionType.CONTRACT_CREATION;
+      // but check if it's a contract first, so we don't overwrite existing data
+      if (!receiverAddress.isContract) {
+        receiverAddress.isContract = 
+          transactionObject.type === TransactionType.CONTRACT_CREATION;
+      }
 
       // Update the transaction to include the receiver now that we have the Address created
       transactionObject.receiver = receiverAddress;
@@ -187,7 +204,7 @@ function getTransactionInfo(
 ): TransactionInfo {
   let transactionsInfo: TransactionInfo = {
     transactions: [],
-    addresses: new Set<string>(),
+    addresses: new Map<string, boolean>(),
   };
 
   for (const block of ctx.blocks) {
@@ -221,13 +238,13 @@ function getTransactionInfo(
           // Save the transaction along with the sender and receiver information
           transactionsInfo.transactions.push([transaction, sender, receiver]);
           // Save the sender and receiver addresses
-          transactionsInfo.addresses.add(sender);
+          transactionsInfo.addresses.set(sender, false);
           if (receiver !== '') {
-            transactionsInfo.addresses.add(receiver);
+            transactionsInfo.addresses.set(receiver, false);
           }
           // Add any new addresses from internal transactions to the list of addresses to be created
           addressesFromInternalTxs.forEach((address) => {
-            transactionsInfo.addresses.add(address);
+            transactionsInfo.addresses.set(address, true);
           });
         }
       } else {
@@ -261,14 +278,14 @@ function getTransactionInfo(
           // Save the transaction along with the sender and receiver information
           transactionsInfo.transactions.push([transaction, sender, receiver]);
           // Save the sender and receiver addresses
-          transactionsInfo.addresses.add(sender);
+          transactionsInfo.addresses.set(sender, false);
           if (receiver !== '') {
-            transactionsInfo.addresses.add(receiver);
+            transactionsInfo.addresses.set(receiver, false);
           }
 
           // Add any new addresses from subcalls to the list of addresses to be created
           addressesFromSubcalls.forEach((address) => {
-            transactionsInfo.addresses.add(address);
+            transactionsInfo.addresses.set(address, false);
           });
         }
       }
