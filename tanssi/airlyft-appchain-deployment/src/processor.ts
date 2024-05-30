@@ -8,22 +8,25 @@ import {
   Call as _Call,
   Extrinsic as _Extrinsic,
 } from '@subsquid/substrate-processor';
-import { events } from './types';
+import { events, calls } from './types';
 
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
     chain: {
-      url: assertNotNull(process.env.RPC_ENDPOINT),
+      url: assertNotNull(process.env.FLASHBOX_RPC_ENDPOINT),
       rateLimit: 10,
     },
   })
-  .setBlockRange({ from: 0 })
+  .setBlockRange({ from: 1581810 })
   .addEvent({
     name: [
       // Get extrinsic failed and success events (since they're not included in call events)
       events.registrar.paraIdRegistered.name
     ],
     call: true
+  })
+  .addCall({
+    name: [ calls.system.remark.name ]
   })
   .setFields({
     call: {

@@ -6,6 +6,11 @@
             "events": [
                 "ParaIdRegistered"
             ]
+        },
+        "System": {
+            "calls": [
+                "remark"
+            ]
         }
     }
 }
