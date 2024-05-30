@@ -13,11 +13,11 @@ import { events, calls } from './types';
 export const processor = new SubstrateBatchProcessor()
   .setDataSource({
     chain: {
-      url: assertNotNull(process.env.FLASHBOX_RPC_ENDPOINT),
+      url: assertNotNull(process.env.RPC_ENDPOINT),
       rateLimit: 10,
     },
   })
-  .setBlockRange({ from: 1581810 })
+  .setBlockRange({ from: 0 })
   .addEvent({
     name: [
       // Get extrinsic failed and success events (since they're not included in call events)
