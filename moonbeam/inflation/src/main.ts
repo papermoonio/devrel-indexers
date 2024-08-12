@@ -113,7 +113,7 @@ function processTreasuryDeposits(event: Event, timestamp: number | undefined) {
   const amount = balance * 4n;
   return new BurnedFees({
     id: event.id,
-    amount: balance,
+    amount,
     timestamp: timestamp ? BigInt(timestamp) : undefined,
   });
 }
