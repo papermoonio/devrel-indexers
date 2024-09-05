@@ -1,0 +1,18 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/hydradx",
+  "pallets": {
+    "XcmpQueue": {
+      "events": ["XcmpMessageSent"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    },
+    "XTokens": {
+      "events": ["TransferredAssets"],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}
