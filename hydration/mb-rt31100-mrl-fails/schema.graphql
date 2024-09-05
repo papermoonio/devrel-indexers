@@ -1,0 +1,10 @@
+type XCM @entity {
+  id: ID!
+  hash: String!
+  sender: String!
+  dest: Int!
+  asset: String!
+  amount: BigInt!
+  assetIDHDX: Int!
+  assetName: String!
+}

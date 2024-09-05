@@ -1,0 +1,5 @@
+type XCM @entity {
+  id: ID!
+  chain: Int! @index
+  hash: String! @index
+}
