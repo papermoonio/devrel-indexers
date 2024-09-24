@@ -12,7 +12,7 @@ import { events } from './types';
 
 export const processor = new SubstrateBatchProcessor()
   .setRpcEndpoint(assertNotNull(process.env.RPC_ENDPOINT))
-  .setBlockRange({ from: 0 })
+  .setBlockRange({ from: 48230 })
   .addEvent({
     name: [
       events.registrar.paraIdRegistered.name,
