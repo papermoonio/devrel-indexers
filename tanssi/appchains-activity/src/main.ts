@@ -4,7 +4,7 @@ import { AppchainActivity } from './model';
 import { events } from './types';
 import * as ss58 from '@subsquid/ss58';
 import { paraIdRegistered } from './types/registrar/events';
-import { In } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 
 processor.run(new TypeormDatabase(), async (ctx) => {
   const activity: AppchainActivity[] = [];
@@ -33,7 +33,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
 
   const registeredAppchains: Map<number, AppchainActivity> = new Map(
       // batch-load using IN operator
-    (await ctx.store.findBy(AppchainActivity, { paraId: In([...registeredParaIds]) }))
+    (await ctx.store.findBy(AppchainActivity, { paraId: In([...registeredParaIds]), decommissionBlockNumber: IsNull() }))
       .map((entity) => [entity.paraId, entity])
   );
 
