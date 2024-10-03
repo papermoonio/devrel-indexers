@@ -1,0 +1,12 @@
+# Registration on Tanssi
+type AppchainActivity @entity {
+  id: ID!
+  paraId: Int! # The parachain ID registered
+  sender: String! # The account that sent the registration extrinsic
+  registrationBlockNumber: Int! # The block number the registration occurred
+  registrationTimestamp: String! # The timestamp the registration occurred
+  launchBlockNumber: Int # The block number the block production started
+  launchTimestamp: String # The timestamp the the block production started
+  decommissionBlockNumber: Int # The block number the deregistration occurred
+  decommissionTimestamp: String # The timestamp the deregistration occurred
+}
