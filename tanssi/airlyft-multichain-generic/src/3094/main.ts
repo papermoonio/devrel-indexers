@@ -324,6 +324,11 @@ function processEvmTransactions(
         transaction.gasUsed = refTime / weightPerGas;
       }
 
+      if (event.name === events.system.extrinsicFailed.name) {
+        // If the transaction failed, no need to process it
+        return;
+      }
+
       if (event.name === events.system.newAccount.name) {
         const { account } = events.system.newAccount.v100.decode(event);
         addressesFromInternalTxs.set(
