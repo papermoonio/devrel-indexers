@@ -11,7 +11,8 @@ import {
 import { stringify } from "csv-stringify";
 
 const main = async () => {
-  const port = PORTS[args.network];
+  //const port = PORTS[args.network];
+  const port = 4350;
   const startTimestamp = args.startDate
     ? new Date(args.startDate).getTime()
     : START_TIMESTAMPS[args.network];

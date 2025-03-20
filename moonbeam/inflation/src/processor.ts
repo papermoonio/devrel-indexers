@@ -1,4 +1,4 @@
-import { assertNotNull } from '@subsquid/util-internal';
+import { assertNotNull } from '@subsquid/util-internal'; 
 import {
   BlockHeader,
   DataHandlerContext,
@@ -17,13 +17,18 @@ export const processor = new SubstrateBatchProcessor()
     url: assertNotNull(process.env.RPC_ENDPOINT),
     rateLimit: 10000
   })
-  .setBlockRange({ from: 4115755 }) // Start from Aug 1
+  .setBlockRange({ from: 8553689 }) // Start from Nov 1
+  //.setBlockRange({ from: 9074989 }) // Start from Nov 1
   .addEvent({
     name: [
       events.parachainStaking.rewarded.name,
       events.parachainStaking.reservedForParachainBond.name,
+      events.parachainStaking.inflationDistributed.name,
       events.treasury.deposit.name,
-      events.moonbeamOrbiters.orbiterRewarded.name
+      events.moonbeamOrbiters.orbiterRewarded.name,
+      events.balances.deposit.name,
+      events.balances.withdraw.name,
+      events.balances.transfer.name,
     ],
   })
   .setFields({

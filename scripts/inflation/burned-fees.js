@@ -11,7 +11,8 @@ import {
 import { stringify } from "csv-stringify";
 
 const main = async () => {
-  const port = PORTS[args.network];
+  //const port = PORTS[args.network];
+  const port = 4350;
   const startTimestamp = args.startDate
     ? new Date(args.startDate).getTime()
     : START_TIMESTAMPS[args.network];
@@ -121,10 +122,10 @@ const getMonthlyData = async (port, start, end, network) => {
 
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
-    const mintingBugAmount = getMintingBugAmount(
-      timeRange.readableStart,
-      network
-    );
+    // const mintingBugAmount = getMintingBugAmount(
+    //   timeRange.readableStart,
+    //   network
+    // );
 
     for (let burnedFee of res.burnedFees) {
       amount += BigInt(burnedFee.amount);
@@ -133,7 +134,7 @@ const getMonthlyData = async (port, start, end, network) => {
     // convert timestamps to readable dates
     const readableDate = new Date(startTimestamp).toISOString().split("T")[0];
     // convert balance to ether
-    const amountInEth = ethers.utils.formatEther(amount) - mintingBugAmount;
+    const amountInEth = ethers.utils.formatEther(amount);
     csvRows.push([readableDate, amountInEth]);
 
     startTimestamp = timeRange.end + 1;
@@ -152,11 +153,11 @@ const getTotalData = async (port, start, end, network) => {
 
     const query = createQuery(timeRange.start, timeRange.end);
     const res = await fetchData(port, query);
-    const mintingBugAmount = getMintingBugAmount(
-      timeRange.readableStart,
-      network
-    );
-    mintingBugTotalAmount += mintingBugAmount;
+    // const mintingBugAmount = getMintingBugAmount(
+    //   timeRange.readableStart,
+    //   network
+    // );
+    // mintingBugTotalAmount += mintingBugAmount;
 
     for (let burnedFee of res.burnedFees) {
       amount += BigInt(burnedFee.amount);
@@ -165,7 +166,7 @@ const getTotalData = async (port, start, end, network) => {
     startTimestamp = timeRange.end + 1;
   }
 
-  const amountInEth = ethers.utils.formatEther(amount) - mintingBugTotalAmount;
+  const amountInEth = ethers.utils.formatEther(amount);
   writeToCsv([[amountInEth]], "total", network);
 };
 

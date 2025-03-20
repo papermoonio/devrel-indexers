@@ -9,6 +9,8 @@ type ParachainBondTransfer @entity {
   id: ID! # block number - event index
   balance: BigInt!
   timestamp: BigInt
+  destination: String! # "treasury" or "parachainBond" or other identifier
+  destinationAddress: String! # The actual address
 }
 
 type BurnedFees @entity {
