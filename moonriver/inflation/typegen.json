@@ -5,12 +5,20 @@
     "ParachainStaking": {
       "events": [
         "Rewarded",
-        "ReservedForParachainBond"
+        "ReservedForParachainBond",
+        "InflationDistributed"
       ]
     },
     "Treasury": {
       "events": [
         "Deposit"
+      ]
+    },
+    "Balances": {
+      "events": [
+        "Deposit",
+        "Withdraw",
+        "Transfer"
       ]
     },
     "MoonbeamOrbiters": {

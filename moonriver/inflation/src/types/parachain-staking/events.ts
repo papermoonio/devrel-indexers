@@ -1,6 +1,7 @@
 import {sts, Block, Bytes, Option, Result, EventType, RuntimeCtx} from '../support'
 import * as v49 from '../v49'
 import * as v1300 from '../v1300'
+import * as v3300 from '../v3300'
 
 export const rewarded =  {
     name: 'ParachainStaking.Rewarded',
@@ -39,6 +40,21 @@ export const reservedForParachainBond =  {
         'ParachainStaking.ReservedForParachainBond',
         sts.struct({
             account: v1300.AccountId20,
+            value: sts.bigint(),
+        })
+    ),
+}
+
+export const inflationDistributed =  {
+    name: 'ParachainStaking.InflationDistributed',
+    /**
+     * Transferred to account which holds funds reserved for parachain bond.
+     */
+    v3300: new EventType(
+        'ParachainStaking.InflationDistributed',
+        sts.struct({
+            index: sts.number(),
+            account: v3300.AccountId20,
             value: sts.bigint(),
         })
     ),
