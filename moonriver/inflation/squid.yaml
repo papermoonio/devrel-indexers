@@ -11,7 +11,7 @@ deploy:
       - sqd
       - process:prod
     env:
-      RPC_ENDPOINT: https://moonriver.blastapi.io/0d519253-8690-44b9-8f5a-557f9867dc08
+      RPC_ENDPOINT: INSERT_API_KEY
   api:
     cmd:
       - sqd
