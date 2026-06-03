@@ -8,3 +8,9 @@
 
 # IDE files
 **/.idea
+
+# Secrets — keep .env out of the repo (each indexer's local .gitignore covers this too)
+**/.env
+
+# Generated inflation report CSVs — local outputs, not for the public repo
+scripts/inflation/csv-files/

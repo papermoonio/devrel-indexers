@@ -15,9 +15,9 @@ export const processor = new SubstrateBatchProcessor()
   .setGateway(lookupArchive('moonriver', { type: 'Substrate' }))
   .setRpcEndpoint({
     url: assertNotNull(process.env.RPC_ENDPOINT),
-    rateLimit: 10000,
+    rateLimit: 1000,
   })
-  .setBlockRange({ from: 9410122 }) // Start from Aug 1
+  .setBlockRange({ from: 16085600, to: 16511539 }) // May 2026 report (expanded ±14400 blocks)
   .addEvent({
     name: [
       // Existing events

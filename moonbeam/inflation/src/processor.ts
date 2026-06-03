@@ -17,7 +17,7 @@ export const processor = new SubstrateBatchProcessor()
     url: assertNotNull(process.env.RPC_ENDPOINT),
     rateLimit: 10000
   })
-  .setBlockRange({ from: 8553689 }) // Start from Nov 1
+  .setBlockRange({ from: 15425600, to: 15864400 }) // May 2026 report (expanded ±14400 blocks)
   //.setBlockRange({ from: 9074989 }) // Start from Nov 1
   .addEvent({
     name: [
